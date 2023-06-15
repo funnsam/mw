@@ -5,6 +5,14 @@ html {
 	color: #fff;
 }
 
+div.blockquote {
+	border-left-style: solid;
+	border-left-width: .25rem;
+	border-left-color: #444;
+
+	padding: .5rem;
+}
+
 pre {
 	padding: .25rem;
 	background-color: #444;

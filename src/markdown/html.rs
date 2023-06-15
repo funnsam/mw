@@ -14,8 +14,14 @@ struct Buffer {
 impl Buffer {
     fn new(l: Lexer<Token>) -> Self {
         let mut ts = Vec::new();
-        for i in l { ts.push(i.unwrap()); }
+        for i in l {
+            eprintln!("{i:?}");
+            ts.push(i.unwrap());
+        }
         Self { ts, ind: 0 }
+    }
+    fn peek(&self) -> Option<Token> {
+        self.ts.get(self.ind).cloned()
     }
 }
 
@@ -32,23 +38,59 @@ fn toks_to_html(lex: &mut Buffer) -> String {
     let mut buf = format!(r#"<!DOCTYPE html><html><head><link rel="stylesheet" href="test.css"></head><body>"#);
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
-    for i in &mut *lex {
-        eprintln!("{i:?}");
+    let mut indentation = 0;
+    let mut dot_lists = Vec::new();
+    let mut in_list = false;
+
+    while let Some(i) = lex.next() {
         match i {
             Token::Text(s)      => buf.push_str(&s),
-            Token::Escape(c)    => buf.push(c),
+            Token::Escape(c)    => match c {
+                '<' => buf.push_str("&lt;"),
+                '>' => buf.push_str("&gt;"),
+                _ => buf.push(c)
+            },
 
-            Token::NewLine      => {
-                let cb_s = scope[Token::CodeBlock("".to_string()).as_usize()];
+            Token::NewLine(ind) => {
+                indentation = ind;
+
+                let mut br = true;
+
                 let heading_s = &mut scope[Token::Heading(0).as_usize()];
                 if *heading_s != 0 {
                     buf.push_str(&format!("</h{}>", heading_s));
                     *heading_s = 0;
-                } else if cb_s != 0 {
-                    buf.push('\n')
-                } else {
-                    buf.push_str("<br>")
+                    br = false;
                 }
+                let cb_s = scope[Token::CodeBlock("".to_string()).as_usize()];
+                if cb_s != 0 {
+                    buf.push('\n');
+                    br = false;
+                }
+                let dl_s = &mut scope[Token::DotList.as_usize()];
+
+                if in_list && lex.peek().unwrap_or(Token::Bang) != Token::DotList {
+                    *dl_s = 2;
+                    in_list = false;
+                }
+
+                if *dl_s == 1 {
+                    buf.push_str("</li>");
+                    br = false;
+                } else if *dl_s == 2 {
+                    buf.push_str("</li></ul>");
+                    br = false;
+                }
+                *dl_s = 0;
+
+                let bq_s = &mut scope[Token::BlockQuote.as_usize()];
+                if *bq_s == 1 {
+                    buf.push_str("</div>");
+                    *bq_s = 0;
+                    br = false;
+                }
+                
+                if br { buf.push_str("<br>"); }
             },
 
             Token::Bold => {
@@ -90,7 +132,14 @@ fn toks_to_html(lex: &mut Buffer) -> String {
                 *f ^= 1;
             },
 
-            Token::Bang => scope[i.as_usize()] = 1,
+            Token::Bang => {
+                if lex.peek() == Some(Token::BlockQuote) {
+                    buf.push('>');
+                    lex.ind += 1;
+                } else {
+                    scope[i.as_usize()] = 1
+                }
+            },
             Token::LinkName(name) => {
                 let url = match lex.next().unwrap()
                     { Token::LinkURL(u) => u, _ => panic!("Unexpected token after URL name") };
@@ -99,7 +148,7 @@ fn toks_to_html(lex: &mut Buffer) -> String {
                     buf.push_str(&format!(r#"<img src="{url}" alt="{name}">"#));
                     scope[Token::Bang.as_usize()] = 0;
                 } else {
-                    buf.push_str(&format!(r#"<a src="{url}">{name}</a>"#))
+                    buf.push_str(&format!(r#"<a href="{url}">{name}</a>"#))
                 }
             },
 
@@ -108,6 +157,25 @@ fn toks_to_html(lex: &mut Buffer) -> String {
             Token::Heading(h) => {
                 buf.push_str(&format!("<h{h}>"));
                 scope[i.as_usize()] = h;
+            },
+
+            Token::DotList => {
+                let c = *dot_lists.last().unwrap_or(&0);
+                if indentation > c {
+                    buf.push_str("<ul>");
+                    dot_lists.push(indentation);
+                    in_list = true;
+                }
+                buf.push_str("<li>");
+                scope[i.as_usize()] = 1;
+                if indentation < c {
+                    scope[i.as_usize()] = 2;
+                    dot_lists.pop();
+                }
+            },
+            Token::BlockQuote => {
+                buf.push_str(r#"<div class="blockquote">"#);
+                scope[i.as_usize()] = 1;
             },
         }
     }
