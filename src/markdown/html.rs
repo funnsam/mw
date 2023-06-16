@@ -35,7 +35,13 @@ impl Iterator for Buffer {
 }
 
 fn toks_to_html(lex: &mut Buffer) -> String {
-    let mut buf = format!(r#"<!DOCTYPE html><html><head><link rel="stylesheet" href="test.css"></head><body>"#);
+    let mut buf = format!(
+r#"<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="test.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.css">
+<script>hljs.highlightAll();</script></head><body>"#).replace("\n", "");
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
     let mut indentation = 0;
@@ -56,17 +62,21 @@ fn toks_to_html(lex: &mut Buffer) -> String {
 
                 let mut br = true;
 
+                // headings
                 let heading_s = &mut scope[Token::Heading(0).as_usize()];
                 if *heading_s != 0 {
                     buf.push_str(&format!("</h{}>", heading_s));
                     *heading_s = 0;
                     br = false;
                 }
-                let cb_s = scope[Token::CodeBlock("".to_string()).as_usize()];
-                if cb_s != 0 {
-                    buf.push('\n');
+
+                // code blocks
+                if scope[Token::CodeBlock("".to_string()).as_usize()] != 0 {
+                    buf.push_str(&format!("\n{}", " ".repeat(ind)));
                     br = false;
                 }
+
+                // dot lists
                 let dl_s = &mut scope[Token::DotList.as_usize()];
 
                 if in_list && lex.peek().unwrap_or(Token::Bang) != Token::DotList {
@@ -83,14 +93,18 @@ fn toks_to_html(lex: &mut Buffer) -> String {
                 }
                 *dl_s = 0;
 
+                // blockquotes
                 let bq_s = &mut scope[Token::BlockQuote.as_usize()];
-                if *bq_s == 1 {
+                if *bq_s == 1 && lex.peek().unwrap_or(Token::Bang) != Token::BlockQuote {
                     buf.push_str("</div>");
                     *bq_s = 0;
                     br = false;
                 }
                 
-                if br { buf.push_str("<br>"); }
+                // normal
+                if br {
+                    buf.push_str(&format!("<br>{}", "&nbsp;".repeat(ind)));
+                }
             },
 
             Token::Bold => {
@@ -176,6 +190,10 @@ fn toks_to_html(lex: &mut Buffer) -> String {
             Token::BlockQuote => {
                 buf.push_str(r#"<div class="blockquote">"#);
                 scope[i.as_usize()] = 1;
+            },
+            Token::KaTeX(latex) => {
+                let opts = katex::Opts::builder().output_type(katex::opts::OutputType::Html).build().unwrap();
+                buf.push_str(&katex::render_with_opts(&latex, opts).unwrap())
             },
         }
     }

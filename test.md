@@ -5,10 +5,10 @@
 ##### H5
 ###### H6
 The quick
-brown
+	brown
 *fox*
-**jumps**
-***over the*** lazy dog \* .
+ **jumps**
+  ***over the*** lazy dog \* .
 
 	- Abc
 	- 123
@@ -16,18 +16,17 @@ brown
 
 > I love Rust
 
-<script!> \
-alert\("hi"\); \
-</script!>
-
-`hi coder` ayo
+<script!>\
+alert\("hi"\);\
+</script!>`hi coder` ayo
 ```c
-// use highlight.js to have highlights
 \#include \<stdio.h\>
 int main\(\) {
-	printf\("Hello, World\!"\)
+    printf\("Hello, World\!"\);
 }
 ```
 
 [Yomamma](https://yourmom.zip)
 ![HTTP cat 404](https://http.cat/404)
+
+$|\frac{x}{a}|^3+|\frac{y}{b}|^3 = 0$

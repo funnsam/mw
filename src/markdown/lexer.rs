@@ -32,10 +32,13 @@ pub enum Token {
     #[regex(r"[#]+", |lex| lex.slice().len())]
     Heading(usize),
 
-    #[regex(r"[^\n*\\#`\[\]\(\)!>-]*", priority = 0, callback = |lex| lex.slice().to_string())]
+    #[regex(r"\$(\\\$|[^\$])*\$", callback = |lex| let s = lex.slice().to_string(); s[1..s.len()-1].to_string())]
+    KaTeX(String),
+
+    #[regex(r"[^\n*\\#`\[\]\(\)!>\-\$]*", priority = 0, callback = |lex| lex.slice().to_string())]
     Text(String),
 
-    #[regex(r"\n[\t ]*", |lex| lex.slice().replace("    ", "\t")[1..].len())]
+    #[regex(r"\n[\t ]*", |lex| lex.slice().replace("\t", "    ")[1..].len())]
     NewLine(usize),
 }
 
