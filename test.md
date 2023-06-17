@@ -8,11 +8,18 @@ The quick
 	brown
 *fox*
  **jumps**
-  ***over the*** lazy dog \* .
+  ***over the*** ~~sma*rt*~~ lazy dog.
 
 	- Abc
 	- 123
 	- English
+		- fun
+	- fix
+		- o-k
+			- cool
+				- it
+					- works
+			- s
 
 > I love Rust & C++ & Go
 >     \- funnsam \- 2023
@@ -40,4 +47,4 @@ int main() {
 
 $\abs{\frac{x}{a}}^3+\abs{\frac{y}{b}}^3 \le 1$
 
-The Verlet integration equation is $\vec{x}_{n+1} = 2\vec{x}_n - \vec{x}_{n-1} + \vec{a}_n{\Delta}t^2$.
+The Verlet integration equation is $\vec{x}_{n+1} = 2\vec{x}_n - \vec{x}_{n-1} + \vec{a}_n{\Delta}t^2$, which is just $\vec{x}_{n+1} = \vec{x}_n + \vec{v}_n{\Delta}t$.

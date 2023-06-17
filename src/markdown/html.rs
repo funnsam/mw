@@ -48,9 +48,8 @@ r#"<!DOCTYPE html><html><head>
 <script>hljs.highlightAll();</script></head><body>"#).replace("\n", "");
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
-    let mut indentation = 0;
+//    let mut indentation = 0;
     let mut dot_lists = Vec::new();
-    let mut in_list = false;
 
     while let Some(i) = lex.next() {
         match i {
@@ -59,7 +58,7 @@ r#"<!DOCTYPE html><html><head>
             Token::Escape(c)    => buf.push(c),
 
             Token::NewLine(ind) => {
-                indentation = ind;
+                // indentation = ind;
 
                 let mut br = true;
 
@@ -72,24 +71,34 @@ r#"<!DOCTYPE html><html><head>
                 }
 
                 // dot lists
+                let c = *dot_lists.last().unwrap_or(&0);
                 let dl_s = &mut scope[Token::DotList.as_usize()];
 
-                if in_list && lex.peek().unwrap_or(Token::Bang) != Token::DotList {
-                    *dl_s = 2;
-                    in_list = false;
-                }
-
-                if *dl_s == 1 {
-                    buf.push_str("</li>");
+                if ind < c {
+                    while ind < *dot_lists.last().unwrap_or(&0) {
+                        buf.push_str("</li></ul>");
+                        dot_lists.pop().unwrap_or(0);
+                    }
                     br = false;
-                } else if *dl_s == 2 {
-                    buf.push_str("</li></ul>");
+                } else if *dl_s == 1 {
+                    buf.push_str("</li>");
                     br = false;
                 }
                 *dl_s = 0;
 
                 // blockquotes
                 let bq_s = &mut scope[Token::BlockQuote.as_usize()];
+
+                if lex.peek().unwrap_or(Token::Bang) == Token::DotList {
+                    if ind > c {
+                        buf.push_str("<ul>");
+                        dot_lists.push(ind);
+                    }
+                    buf.push_str("<li>");
+                    *bq_s = 1;
+                    lex.ind += 1;
+                }
+
                 if *bq_s == 1 && lex.peek().unwrap_or(Token::Bang) != Token::BlockQuote {
                     buf.push_str("</div>");
                     *bq_s = 0;
@@ -124,6 +133,15 @@ r#"<!DOCTYPE html><html><head>
                     buf.push_str("<i>")
                 } else {
                     buf.push_str("</i>")
+                }
+                *f ^= 1;
+            },
+            Token::Strike => {
+                let f = &mut scope[i.as_usize()];
+                if *f == 0 {
+                    buf.push_str("<del>")
+                } else {
+                    buf.push_str("</del>")
                 }
                 *f ^= 1;
             },
@@ -164,23 +182,8 @@ r#"<!DOCTYPE html><html><head>
                 scope[i.as_usize()] = h;
             },
 
-            Token::DotList => {
-                let c = *dot_lists.last().unwrap_or(&0);
-                if indentation > c {
-                    buf.push_str("<ul>");
-                    dot_lists.push(indentation);
-                    in_list = true;
-                }
-                buf.push_str("<li>");
-                scope[i.as_usize()] = 1;
-                if indentation < c {
-                    scope[i.as_usize()] = 2;
-                    dot_lists.pop();
-                }
-            },
-            Token::BlockQuote => {
-                buf.push_str("&gt;");
-            },
+            Token::DotList      => buf.push_str("-"),
+            Token::BlockQuote   => buf.push_str("&gt;"),
             Token::MathExpr(expr) => {
                 buf.push_str(
                     &MATHJAX.render(&format!("{preamble}\n{expr}")).unwrap().into_raw()

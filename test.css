@@ -14,12 +14,19 @@ div.blockquote {
 }
 
 pre {
-	padding: .25rem;
-	background-color: #444;
 	width: fit-content;
 }
 
 code {
-	background-color: #444;
 	font-family: 'Cascadia Code', monospace, sans-serif;
+	border-radius: 5px;
+}
+
+pre > code {
+	border: solid .25rem #444;
+}
+
+code:not(pre > code) {
+	background-color: #444;
+	padding: .25rem;
 }
