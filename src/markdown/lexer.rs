@@ -11,8 +11,9 @@ pub enum Token {
     #[token("**")]
     Bold,
 
-    #[regex(r"```[^\n]*[\n]?", |lex| lex.slice()[3..].trim().to_string())]
-    CodeBlock(String),
+    // TODO: single and double back ticks
+    #[regex(r"```[^\n]*\n([^`])*```", |lex| let (a, b) = lex.slice()[3..].split_once("\n").unwrap(); (a.to_string(), b[..b.len()-3].to_string()))]
+    CodeBlock((String, String)),
     #[token("`")]
     InlineCode,
 
@@ -33,7 +34,10 @@ pub enum Token {
     Heading(usize),
 
     #[regex(r"\$(\\\$|[^\$])*\$", callback = |lex| let s = lex.slice().to_string(); s[1..s.len()-1].to_string())]
-    KaTeX(String),
+    MathExpr(String),
+
+    #[regex(r"!\{(\\\}|[^\}])+\}", priority = 99, callback = |lex| let s = lex.slice().to_string(); s[2..s.len()-1].replace("\\}", "}").to_string())]
+    TextBlock(String),
 
     #[regex(r"[^\n*\\#`\[\]\(\)!>\-\$]*", priority = 0, callback = |lex| lex.slice().to_string())]
     Text(String),

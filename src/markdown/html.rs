@@ -1,9 +1,10 @@
 use super::lexer::*;
+use mathjax::MathJax;
 
-pub fn to_html(src: &str) -> String {
+pub fn to_html(src: &str, preamble: &str) -> String {
     let lex = Token::lexer(src);
     let mut buf = Buffer::new(lex);
-    toks_to_html(&mut buf)
+    toks_to_html(&mut buf, preamble)
 }
 
 struct Buffer {
@@ -34,13 +35,16 @@ impl Iterator for Buffer {
     }
 }
 
-fn toks_to_html(lex: &mut Buffer) -> String {
+lazy_static::lazy_static! {
+    static ref MATHJAX: MathJax = MathJax::new().unwrap();
+}
+
+fn toks_to_html(lex: &mut Buffer, preamble: &str) -> String {
     let mut buf = format!(
 r#"<!DOCTYPE html><html><head>
 <link rel="stylesheet" href="test.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.7/dist/katex.min.css">
 <script>hljs.highlightAll();</script></head><body>"#).replace("\n", "");
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
@@ -50,12 +54,9 @@ r#"<!DOCTYPE html><html><head>
 
     while let Some(i) = lex.next() {
         match i {
-            Token::Text(s)      => buf.push_str(&s),
-            Token::Escape(c)    => match c {
-                '<' => buf.push_str("&lt;"),
-                '>' => buf.push_str("&gt;"),
-                _ => buf.push(c)
-            },
+            Token::Text(ref s)  => buf.push_str(&sanitize(s)),
+            Token::TextBlock(s) => buf.push_str(&s),
+            Token::Escape(c)    => buf.push(c),
 
             Token::NewLine(ind) => {
                 indentation = ind;
@@ -67,12 +68,6 @@ r#"<!DOCTYPE html><html><head>
                 if *heading_s != 0 {
                     buf.push_str(&format!("</h{}>", heading_s));
                     *heading_s = 0;
-                    br = false;
-                }
-
-                // code blocks
-                if scope[Token::CodeBlock("".to_string()).as_usize()] != 0 {
-                    buf.push_str(&format!("\n{}", " ".repeat(ind)));
                     br = false;
                 }
 
@@ -99,6 +94,13 @@ r#"<!DOCTYPE html><html><head>
                     buf.push_str("</div>");
                     *bq_s = 0;
                     br = false;
+                } else if *bq_s == 0 && lex.peek().unwrap_or(Token::Bang) == Token::BlockQuote {
+                    buf.push_str(&format!(r#"<div class="blockquote">"#));
+                    lex.ind += 1;
+                    *bq_s = 1;
+                    br = false;
+                } else if lex.peek().unwrap_or(Token::Bang) == Token::BlockQuote {
+                    lex.ind += 1;
                 }
                 
                 // normal
@@ -126,14 +128,8 @@ r#"<!DOCTYPE html><html><head>
                 *f ^= 1;
             },
 
-            Token::CodeBlock(ref l) => {
-                let f = &mut scope[i.as_usize()];
-                if *f == 0 {
-                    buf.push_str(&format!("<pre><code class=\"language-{l}\">"))
-                } else {
-                    buf.push_str("</code></pre>")
-                }
-                *f ^= 1;
+            Token::CodeBlock((ref l, ref c)) => {
+                buf.push_str(&format!("<pre><code class=\"language-{l}\">{}</code></pre>", sanitize(c)));
             },
 
             Token::InlineCode => {
@@ -147,12 +143,7 @@ r#"<!DOCTYPE html><html><head>
             },
 
             Token::Bang => {
-                if lex.peek() == Some(Token::BlockQuote) {
-                    buf.push('>');
-                    lex.ind += 1;
-                } else {
-                    scope[i.as_usize()] = 1
-                }
+                scope[i.as_usize()] = 1
             },
             Token::LinkName(name) => {
                 let url = match lex.next().unwrap()
@@ -188,12 +179,12 @@ r#"<!DOCTYPE html><html><head>
                 }
             },
             Token::BlockQuote => {
-                buf.push_str(r#"<div class="blockquote">"#);
-                scope[i.as_usize()] = 1;
+                buf.push_str("&gt;");
             },
-            Token::KaTeX(latex) => {
-                let opts = katex::Opts::builder().output_type(katex::opts::OutputType::Html).build().unwrap();
-                buf.push_str(&katex::render_with_opts(&latex, opts).unwrap())
+            Token::MathExpr(expr) => {
+                buf.push_str(
+                    &MATHJAX.render(&format!("{preamble}\n{expr}")).unwrap().into_raw()
+                );
             },
         }
     }
@@ -201,4 +192,11 @@ r#"<!DOCTYPE html><html><head>
     buf.push_str("</body></html>");
 
     buf
+}
+
+pub fn sanitize(s: &str) -> String {
+    s.replace("&", "&amp;")
+     .replace("<", "&lt;")
+     .replace(">", "&gt;")
+     .replace(" ", "&nbsp;")
 }

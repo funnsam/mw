@@ -6,5 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-katex = { version = "0.4.6", default-features = false, features = ["duktape"] }
+lazy_static = "1.4.0"
 logos = "0.13.0"
+mathjax = { version = "0.1.1", default-features = false, features = ["node"] }

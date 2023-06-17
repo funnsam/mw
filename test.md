@@ -14,19 +14,30 @@ The quick
 	- 123
 	- English
 
-> I love Rust
+> I love Rust & C++ & Go
+>     \- funnsam \- 2023
 
-<script!>\
-alert\("hi"\);\
-</script!>`hi coder` ayo
+\&le;
+
+!{
+	<script>
+		if (true) {
+			alert("hi");
+		\}
+	</script>
+}
+
+`hi coder` ayo
 ```c
-\#include \<stdio.h\>
-int main\(\) {
-    printf\("Hello, World\!"\);
+#include <stdio.h>
+int main() {
+    printf("Hello, World!");
 }
 ```
 
 [Yomamma](https://yourmom.zip)
 ![HTTP cat 404](https://http.cat/404)
 
-$|\frac{x}{a}|^3+|\frac{y}{b}|^3 = 0$
+$\abs{\frac{x}{a}}^3+\abs{\frac{y}{b}}^3 \le 1$
+
+The Verlet integration equation is $\vec{x}_{n+1} = 2\vec{x}_n - \vec{x}_{n-1} + \vec{a}_n{\Delta}t^2$.
