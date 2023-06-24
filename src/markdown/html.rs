@@ -1,10 +1,11 @@
 use super::lexer::*;
 use mathjax::MathJax;
+use ini::Ini;
 
-pub fn to_html(src: &str, preamble: &str) -> String {
+pub fn to_html(src: &str, opts: &Opts) -> String {
     let lex = Token::lexer(src);
     let mut buf = Buffer::new(lex);
-    toks_to_html(&mut buf, preamble)
+    toks_to_html(&mut buf, opts)
 }
 
 struct Buffer {
@@ -16,7 +17,6 @@ impl Buffer {
     fn new(l: Lexer<Token>) -> Self {
         let mut ts = Vec::new();
         for i in l {
-            eprintln!("{i:?}");
             ts.push(i.unwrap());
         }
         Self { ts, ind: 0 }
@@ -39,13 +39,59 @@ lazy_static::lazy_static! {
     static ref MATHJAX: MathJax = MathJax::new().unwrap();
 }
 
-fn toks_to_html(lex: &mut Buffer, preamble: &str) -> String {
+#[derive(Clone, Debug)]
+pub struct Opts {
+    pub preamble: String,
+    pub title: String,
+    pub stylesheet: String,
+    pub script: String,
+
+    pub ini: Ini,
+}
+
+impl Opts {
+    pub fn load_ini(f: Option<String>, g: &Self) -> Self {
+        if f.is_none() {
+            return g.clone()
+        }
+
+        let f = f.unwrap();
+        let c = Ini::load_from_str(&f).unwrap();
+        let s = c.section::<String>(None).unwrap();
+
+        Self {
+            preamble: s.get("preamble").unwrap_or(&g.preamble).to_string(),
+            title: s.get("title").unwrap_or(&g.title).to_string(),
+            stylesheet: s.get("stylesheet").unwrap_or(&g.stylesheet).to_string(),
+            script: s.get("script").unwrap_or(&g.script).to_string(),
+
+            ini: c,
+        }
+    }
+
+    pub fn load_global(f: String, preamble: Option<String>) -> Self {
+        let c = Ini::load_from_str(&f).unwrap();
+        let s = c.section::<String>(None).unwrap();
+
+        Self {
+            preamble: s.get("preamble").unwrap_or(&preamble.unwrap()).to_string(),
+            title: s.get("title").unwrap().to_string(),
+            stylesheet: s.get("stylesheet").unwrap().to_string(),
+            script: s.get("script").unwrap().to_string(),
+
+            ini: c,
+        }
+    }
+}
+
+fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
     let mut buf = format!(
 r#"<!DOCTYPE html><html><head>
-<link rel="stylesheet" href="test.css">
+<link rel="stylesheet" href="{}">
+<style src="{}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script></head><body>"#).replace("\n", "");
+<script>hljs.highlightAll();</script></head><body>"#, opts.stylesheet, opts.script).replace("\n", "");
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
 //    let mut indentation = 0;
@@ -150,15 +196,7 @@ r#"<!DOCTYPE html><html><head>
                 buf.push_str(&format!("<pre><code class=\"language-{l}\">{}</code></pre>", sanitize(c)));
             },
 
-            Token::InlineCode => {
-                let f = &mut scope[i.as_usize()];
-                if *f == 0 {
-                    buf.push_str("<code>")
-                } else {
-                    buf.push_str("</code>")
-                }
-                *f ^= 1;
-            },
+            Token::InlineCode(c) => buf.push_str(&format!("<code>{c}</code>")),
 
             Token::Bang => {
                 scope[i.as_usize()] = 1
@@ -186,7 +224,7 @@ r#"<!DOCTYPE html><html><head>
             Token::BlockQuote   => buf.push_str("&gt;"),
             Token::MathExpr(expr) => {
                 buf.push_str(
-                    &MATHJAX.render(&format!("{preamble}\n{expr}")).unwrap().into_raw()
+                    &MATHJAX.render(&format!("{}\n{expr}", opts.preamble)).unwrap().into_raw()
                 );
             },
         }

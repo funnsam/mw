@@ -8,18 +8,10 @@ The quick
 	brown
 *fox*
  **jumps**
-  ***over the*** ~~sma*rt*~~ lazy dog.
+  ***over the*** ~~smart~~ lazy dog.
 
-	- Abc
-	- 123
-	- English
-		- fun
-	- fix
-		- o-k
-			- cool
-				- it
-					- works
-			- s
+	- Unordered lists
+		- Nesting lists works too
 
 > I love Rust & C++ & Go
 >     \- funnsam \- 2023
@@ -34,7 +26,7 @@ The quick
 	</script>
 }
 
-`hi coder` ayo
+`Inline code blocks`
 ```c
 #include <stdio.h>
 int main() {

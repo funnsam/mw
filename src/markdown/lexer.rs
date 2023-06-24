@@ -16,8 +16,8 @@ pub enum Token {
     // TODO: single and double back ticks
     #[regex(r"```[^\n]*\n([^`])*```", |lex| let (a, b) = lex.slice()[3..].split_once("\n").unwrap(); (a.to_string(), b[..b.len()-3].to_string()))]
     CodeBlock((String, String)),
-    #[token("`")]
-    InlineCode,
+    #[regex(r"`(\\`|[^\n`])*`", |lex| let c = lex.slice(); c[1..c.len()-1].to_string())]
+    InlineCode(String),
 
     #[token("-")]
     DotList,
