@@ -1,11 +1,12 @@
 use super::lexer::*;
 use mathjax::MathJax;
 use ini::Ini;
+use crate::placeholder::*;
 
-pub fn to_html(src: &str, opts: &Opts) -> String {
-    let lex = Token::lexer(src);
+pub fn to_html(md: &str, tem: &str, opts: &Opts, gopts: &Opts) -> Result<String, PlaceholderError> {
+    let lex = Token::lexer(md);
     let mut buf = Buffer::new(lex);
-    toks_to_html(&mut buf, opts)
+    placeholder_process(tem, &opts.ini, &gopts.ini, &toks_to_html(&mut buf, opts))
 }
 
 struct Buffer {
@@ -42,9 +43,7 @@ lazy_static::lazy_static! {
 #[derive(Clone, Debug)]
 pub struct Opts {
     pub preamble: String,
-    pub title: String,
-    pub stylesheet: String,
-    pub script: String,
+    pub template: String,
 
     pub ini: Ini,
 }
@@ -61,9 +60,7 @@ impl Opts {
 
         Self {
             preamble: s.get("preamble").unwrap_or(&g.preamble).to_string(),
-            title: s.get("title").unwrap_or(&g.title).to_string(),
-            stylesheet: s.get("stylesheet").unwrap_or(&g.stylesheet).to_string(),
-            script: s.get("script").unwrap_or(&g.script).to_string(),
+            template: s.get("template").unwrap_or(&g.template).to_string(),
 
             ini: c,
         }
@@ -75,9 +72,7 @@ impl Opts {
 
         Self {
             preamble: s.get("preamble").unwrap_or(&preamble.unwrap()).to_string(),
-            title: s.get("title").unwrap().to_string(),
-            stylesheet: s.get("stylesheet").unwrap().to_string(),
-            script: s.get("script").unwrap().to_string(),
+            template: s.get("template").unwrap_or("default.html").to_string(),
 
             ini: c,
         }
@@ -85,13 +80,7 @@ impl Opts {
 }
 
 fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
-    let mut buf = format!(
-r#"<!DOCTYPE html><html><head>
-<link rel="stylesheet" href="{}">
-<style src="{}"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script></head><body>"#, opts.stylesheet, opts.script).replace("\n", "");
+    let mut buf = String::new();
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
 //    let mut indentation = 0;
@@ -229,8 +218,6 @@ r#"<!DOCTYPE html><html><head>
             },
         }
     }
-
-    buf.push_str("</body></html>");
 
     buf
 }

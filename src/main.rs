@@ -7,6 +7,7 @@ mod placeholder;
 use markdown::html::Opts;
 use walkdir::WalkDir;
 use rayon::prelude::*;
+use std::process::exit;
 
 fn main() {
     let preamble = std::fs::read_to_string("preamble.tex").ok();
@@ -28,9 +29,18 @@ fn main() {
                     let opts = std::fs::read_to_string(file.path()).ok();
                     let opts = Opts::load_ini(opts, &gopts);
 
-                    let f = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let md = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let tem = std::fs::read_to_string(&format!("templates/{}", &opts.template)).unwrap().replace("\r\n", "\n");
 
-                    let html = markdown::html::to_html(&f, &opts);
+                    let html = markdown::html::to_html(&md, &tem, &opts, &gopts);
+                    let html = match html {
+                        Ok(html) => html,
+                        Err(err) => {
+                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err:?}");
+                            exit(1);
+                        },
+                    };
+
                     let _ = std::fs::create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap());
                     let _ = std::fs::write(tar_file, html).unwrap();
                 },
