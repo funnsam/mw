@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<title>{title} - mkwebsite document</title>
 		<link rel="stylesheet" href="{stylesheet}">
 		<script src="{script}"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
@@ -8,6 +9,13 @@
 		<script>hljs.highlightAll();</script>
 	</head>
 	<body>
-		{body}
+		<div id="root">
+			<nav>
+				<iframe src="/"></iframe>
+			</nav>
+			<div id="content">
+				{body}
+			</div>
+		</div>
 	</body>
 </html>

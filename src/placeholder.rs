@@ -1,5 +1,6 @@
 pub use logos::*;
 use ini::Ini;
+use std::fmt;
 
 #[repr(usize)]
 #[derive(Debug, Clone, PartialEq, Eq, Logos)]
@@ -44,6 +45,13 @@ pub fn placeholder_process(tem: &str, ini: &Ini, gini: &Ini, body: &str) -> Resu
 
 #[derive(Clone, Debug)]
 pub enum PlaceholderError {
-    CannotFindSection(String),
     CannotFindKey(String, String),
+}
+
+impl fmt::Display for PlaceholderError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PlaceholderError::CannotFindKey(s, k) => write!(f, "can't find key {k} in section {s}")
+        }
+    }
 }

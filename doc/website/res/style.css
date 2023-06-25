@@ -1,0 +1,85 @@
+@import url('https://fonts.cdnfonts.com/css/cascadia-code');
+
+html {
+	background-color: #282c34;
+	color: #abb2bf;
+	overflow: hidden;
+}
+
+body, html {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	color: #61afef;
+}
+
+div#root {
+	box-sizing: border-box;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	align-items: stretch;
+	padding: 1rem;
+}
+
+div#content:not(.index) {
+	border: solid .25rem #444;
+	border-radius: 5px;
+	padding: 1rem;
+	flex: 1;
+}
+
+div#content {
+	overflow-wrap: break-word;
+	overflow: scroll;
+}
+
+nav {
+	flex-basis: 30vw;
+	min-width: 30vw;
+	border: solid .25rem #444;
+	border-radius: 5px;
+	margin-right: 1rem;
+}
+
+nav > iframe {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	border: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+	margin-bottom: .5rem;
+}
+
+div.blockquote {
+	border-left-style: solid;
+	border-left-width: .25rem;
+	border-left-color: #444;
+
+	padding: .5rem;
+}
+
+pre {
+	width: fit-content;
+}
+
+code {
+	font-family: 'Cascadia Code', monospace, sans-serif;
+	border-radius: 5px;
+}
+
+pre > code {
+	border: solid .25rem #444;
+}
+
+code:not(pre > code) {
+	background-color: #444;
+	padding: .25rem;
+}

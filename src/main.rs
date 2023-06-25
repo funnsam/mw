@@ -11,7 +11,7 @@ use std::process::exit;
 
 fn main() {
     let preamble = std::fs::read_to_string("preamble.tex").ok();
-    let global_ini = std::fs::read_to_string("markdown/_global.ini").unwrap().replace("\r\n", "\n");
+    let global_ini = std::fs::read_to_string("markdown/_global.cfg").unwrap().replace("\r\n", "\n");
     let gopts = Opts::load_global(global_ini, preamble);
 
     let _ = fs_extra::dir::remove("website");
@@ -26,7 +26,7 @@ fn main() {
 
                     eprintln!("\x1b[1;32mCompiling\x1b[0m\t{} -> {}", file.path().display(), tar_file);
 
-                    let opts = std::fs::read_to_string(file.path()).ok();
+                    let opts = std::fs::read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
                     let opts = Opts::load_ini(opts, &gopts);
 
                     let md = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
@@ -36,7 +36,7 @@ fn main() {
                     let html = match html {
                         Ok(html) => html,
                         Err(err) => {
-                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err:?}");
+                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
                             exit(1);
                         },
                     };
@@ -45,10 +45,26 @@ fn main() {
                     let _ = std::fs::write(tar_file, html).unwrap();
                 },
                 "html" => {
-                    let tar = format!("website/{}", file.path().strip_prefix("markdown").unwrap().to_str().unwrap());
-                    eprintln!("\x1b[1;32mCopying\x1b[0m\t\t{} -> {}", file.path().display(), tar);
+                    let tar_file = format!("website/{}", file.path().strip_prefix("markdown").unwrap().to_str().unwrap());
+                    eprintln!("\x1b[1;32mCopying\x1b[0m\t\t{} -> {}", file.path().display(), tar_file);
 
-                    let _ = fs_extra::file::copy(file.path().to_str().unwrap(), tar, &fs_extra::file::CopyOptions::default());
+                    let opts = std::fs::read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
+                    let opts = Opts::load_ini(opts, &gopts);
+
+                    let src = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let tem = std::fs::read_to_string(&format!("templates/{}", &opts.template)).unwrap().replace("\r\n", "\n");
+
+                    let html = placeholder::placeholder_process(&tem, &opts.ini, &gopts.ini, &src);
+                    let html = match html {
+                        Ok(html) => html,
+                        Err(err) => {
+                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
+                            exit(1);
+                        },
+                    };
+
+                    let _ = std::fs::create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap());
+                    let _ = std::fs::write(tar_file, html).unwrap();
                 },
                 _ => ()
             }

@@ -1,4 +1,3 @@
 /target
 /Cargo.lock
-/website/*
-# /markdown/*
+template_project/website/*

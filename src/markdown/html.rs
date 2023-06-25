@@ -118,21 +118,20 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
                 } else if *dl_s == 1 {
                     buf.push_str("</li>");
                     br = false;
-                }
-                *dl_s = 0;
-
-                // blockquotes
-                let bq_s = &mut scope[Token::BlockQuote.as_usize()];
-
-                if lex.peek().unwrap_or(Token::Bang) == Token::DotList {
+                } else if lex.peek().unwrap_or(Token::Bang) == Token::DotList {
                     if ind > c {
                         buf.push_str("<ul>");
                         dot_lists.push(ind);
                     }
                     buf.push_str("<li>");
-                    *bq_s = 1;
+                    *dl_s = 1;
                     lex.ind += 1;
+                    br = false;
                 }
+                *dl_s = 0;
+
+                // blockquotes
+                let bq_s = &mut scope[Token::BlockQuote.as_usize()];
 
                 if *bq_s == 1 && lex.peek().unwrap_or(Token::Bang) != Token::BlockQuote {
                     buf.push_str("</div>");
@@ -182,7 +181,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
             },
 
             Token::CodeBlock((ref l, ref c)) => {
-                buf.push_str(&format!("<pre><code class=\"language-{l}\">{}</code></pre>", sanitize(c)));
+                buf.push_str(&format!("<pre><code class=\"language-{l}\">{}</code></pre>", sanitize(c.trim_end())));
             },
 
             Token::InlineCode(c) => buf.push_str(&format!("<code>{c}</code>")),
