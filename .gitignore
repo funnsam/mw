@@ -1,3 +1,4 @@
 /target
 /Cargo.lock
 template_project/website/*
+/doc/mw

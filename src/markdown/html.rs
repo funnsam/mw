@@ -118,7 +118,8 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
                 } else if *dl_s == 1 {
                     buf.push_str("</li>");
                     br = false;
-                } else if lex.peek().unwrap_or(Token::Bang) == Token::DotList {
+                }
+                if lex.peek().unwrap_or(Token::Bang) == Token::DotList {
                     if ind > c {
                         buf.push_str("<ul>");
                         dot_lists.push(ind);

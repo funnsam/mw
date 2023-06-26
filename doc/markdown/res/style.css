@@ -27,7 +27,7 @@ div#root {
 }
 
 div#content:not(.index) {
-	border: solid .25rem #444;
+	border: solid .2rem #5c6370;
 	border-radius: 5px;
 	padding: 1rem;
 	flex: 1;
@@ -41,7 +41,7 @@ div#content {
 nav {
 	flex-basis: 30vw;
 	min-width: 30vw;
-	border: solid .25rem #444;
+	border: solid .2rem #5c6370;
 	border-radius: 5px;
 	margin-right: 1rem;
 }
@@ -61,7 +61,7 @@ h1, h2, h3, h4, h5, h6 {
 div.blockquote {
 	border-left-style: solid;
 	border-left-width: .25rem;
-	border-left-color: #444;
+	border-left-color: #5c6370;
 
 	padding: .5rem;
 }
@@ -76,10 +76,13 @@ code {
 }
 
 pre > code {
-	border: solid .25rem #444;
+	border: solid .2rem #5c6370;
 }
 
 code:not(pre > code) {
-	background-color: #444;
-	padding: .25rem;
+	background-color: #32363e;
+	border: solid 1px #5c6370;
+
+	position: relative;
+	z-index: -1;
 }
