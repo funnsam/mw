@@ -41,7 +41,7 @@ pub enum Token {
     #[regex(r"!\{(\\\}|[^\}])+\}", priority = 99, callback = |lex| let s = lex.slice().to_string(); s[2..s.len()-1].replace("\\}", "}").to_string())]
     TextBlock(String),
 
-    #[regex(r"[^\n*\\#`\[\]\(\)!>\-\$~]*", priority = 0, callback = |lex| lex.slice().to_string())]
+    #[regex(r"[^\n*\\#`\[\]\(\)!>\-\$~:]*", priority = 0, callback = |lex| lex.slice().to_string())]
     Text(String),
 
     #[regex(r"\n[\t ]*", |lex| lex.slice().replace("\t", "    ")[1..].len())]
@@ -49,6 +49,9 @@ pub enum Token {
 
     #[regex(r":[a-z_]+:", |lex| let a = lex.slice(); a[1..a.len()-1].to_string())]
     Emoji(String),
+
+    #[regex(r".", |lex| lex.slice().chars().nth(0).unwrap())]
+    Character(char),
 }
 
 impl Token {
