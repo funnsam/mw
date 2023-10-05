@@ -46,6 +46,9 @@ pub enum Token {
 
     #[regex(r"\n[\t ]*", |lex| lex.slice().replace("\t", "    ")[1..].len())]
     NewLine(usize),
+
+    #[regex(r":[a-z_]+:", |lex| let a = lex.slice(); a[1..a.len()-1].to_string())]
+    Emoji(String),
 }
 
 impl Token {

@@ -37,6 +37,8 @@ int main() {
 [Yomamma](https://yourmom.zip)
 ![HTTP cat 404](https://http.cat/404)
 
+:joy:
+
 $\abs{\frac{x}{a}}^3+\abs{\frac{y}{b}}^3 \le 1$
 
 The Verlet integration equation is $\vec{x}_{n+1} = 2\vec{x}_n - \vec{x}_{n-1} + \vec{a}_n{\Delta}t^2$, which is just $\vec{x}_{n+1} = \vec{x}_n + \vec{v}_n{\Delta}t$.

@@ -216,6 +216,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
                     &MATHJAX.render(&format!("{}\n{expr}", opts.preamble)).unwrap().into_raw()
                 );
             },
+            Token::Emoji(em) => buf.push_str(emojis::get_by_shortcode(&em).map(|a| a.as_str()).unwrap_or(&em)),
         }
     }
 
