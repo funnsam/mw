@@ -83,7 +83,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
     let mut buf = String::new();
     let mut scope = vec![0_usize; std::mem::variant_count::<Token>()];
 
-//    let mut indentation = 0;
+    let mut heading_no = 0;
     let mut dot_lists = Vec::new();
 
     while let Some(i) = lex.next() {
@@ -100,7 +100,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
                 // headings
                 let heading_s = &mut scope[Token::Heading(0).as_usize()];
                 if *heading_s != 0 {
-                    buf.push_str(&format!("</h{}>", heading_s));
+                    buf.push_str(&format!("</h{}></a>", heading_s));
                     *heading_s = 0;
                     br = false;
                 }
@@ -209,8 +209,9 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
             Token::LinkURL(_) => panic!("Unexpected round brackets"),
 
             Token::Heading(h) => {
-                buf.push_str(&format!("<h{h}>"));
+                buf.push_str(&format!(r##"<a href="#section_{heading_no}" class="title"><h{h} id="section_{heading_no}">"##));
                 scope[i.as_usize()] = h;
+                heading_no += 1;
             },
 
             Token::DotList      => buf.push_str("-"),
