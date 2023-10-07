@@ -188,7 +188,11 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
             Token::InlineCode(c) => buf.push_str(&format!("<code>{c}</code>")),
 
             Token::Bang => {
-                scope[i.as_usize()] = 1
+                if matches!(lex.peek(), Some(Token::LinkName(_))) {
+                    scope[i.as_usize()] = 1;
+                } else {
+                    buf.push_str("!");
+                }
             },
             Token::LinkName(name) => {
                 let url = match lex.next().unwrap()
