@@ -100,7 +100,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
                 // headings
                 let heading_s = &mut scope[Token::Heading(0).as_usize()];
                 if *heading_s != 0 {
-                    buf.push_str(&format!("</h{}></a>", heading_s));
+                    buf.push_str(&format!("</a></h{}>", heading_s));
                     *heading_s = 0;
                     br = false;
                 }
@@ -209,7 +209,7 @@ fn toks_to_html(lex: &mut Buffer, opts: &Opts) -> String {
             Token::LinkURL(_) => panic!("Unexpected round brackets"),
 
             Token::Heading(h) => {
-                buf.push_str(&format!(r##"<a href="#section_{heading_no}" class="title"><h{h} id="section_{heading_no}">"##));
+                buf.push_str(&format!(r##"<h{h}><a name="section_{heading_no}" href="#section_{heading_no}" class="title">"##));
                 scope[i.as_usize()] = h;
                 heading_no += 1;
             },
