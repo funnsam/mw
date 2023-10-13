@@ -10,25 +10,18 @@ use rayon::prelude::*;
 use std::process::exit;
 use std::collections::{HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
+use std::fs::*;
 
 fn main() {
-    let preamble = std::fs::read_to_string("preamble.tex").ok();
-    let global_ini = std::fs::read_to_string("markdown/_global.cfg").unwrap().replace("\r\n", "\n");
+    let preamble = read_to_string("preamble.tex").ok();
+    let global_ini = read_to_string("markdown/_global.cfg").unwrap().replace("\r\n", "\n");
     let gopts = Opts::load_global(global_ini, preamble);
 
-    let _ = fs_extra::dir::remove("website");
     let mut templates = HashMap::new();
     for file in WalkDir::new("templates").into_iter().filter_map(|file| file.ok()).filter(|file| file.metadata().unwrap().is_file()) {
-        let tem = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
-        let hash = hash_str(&tem);
-        let rel = if file.path().is_absolute() {
-            file.path().strip_prefix(std::env::current_dir().unwrap()).unwrap().to_str().unwrap()
-        } else {
-            file.path().to_str().unwrap()
-        };
-        let old_hash = get_hash(rel).unwrap_or(0);
-        set_hash(rel, hash);
-        templates.insert(file.file_name().to_str().unwrap().to_string(), (tem, hash == old_hash));
+        let tem = read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+        let hash = hash_file(&tem, file.clone());
+        templates.insert(file.file_name().to_str().unwrap().to_string(), (tem, hash));
     }
 
     WalkDir::new("markdown").into_iter().par_bridge().filter_map(|file| file.ok()).for_each(|file| {
@@ -41,45 +34,57 @@ fn main() {
 
                     eprintln!("\x1b[1;32mCompiling\x1b[0m\t{} -> {}", file.path().display(), tar_file);
 
-                    let opts = std::fs::read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
+                    let opts_path = file.path().with_extension("cfg");
+                    let opts_path = opts_path.to_str().unwrap();
+                    let opts = read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
+                    let opts_hasheq = hash_path(&opts, opts_path);
                     let opts = Opts::load_ini(opts, &gopts);
 
-                    let md = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let md = read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let md_hasheq = hash_file(&md, file);
                     let (tem, tem_hasheq) = templates.get(&opts.template).unwrap();
 
-                    let html = markdown::html::to_html(&md, &tem, &opts, &gopts);
-                    let html = match html {
-                        Ok(html) => html,
-                        Err(err) => {
-                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
-                            exit(1);
-                        },
-                    };
+                    if !(std::path::Path::new(&tar_file).exists() && opts_hasheq && md_hasheq && *tem_hasheq) {
+                        let html = markdown::html::to_html(&md, &tem, &opts, &gopts);
+                        let html = match html {
+                            Ok(html) => html,
+                            Err(err) => {
+                                eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
+                                exit(1);
+                            },
+                        };
 
-                    let _ = std::fs::create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap());
-                    let _ = std::fs::write(tar_file, html).unwrap();
+                        create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap()).unwrap();
+                        write(tar_file, html).unwrap();
+                    }
                 },
                 "html" => {
                     let tar_file = format!("website/{}", file.path().strip_prefix("markdown").unwrap().to_str().unwrap());
                     eprintln!("\x1b[1;32mCopying\x1b[0m\t\t{} -> {}", file.path().display(), tar_file);
 
-                    let opts = std::fs::read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
+                    let opts_path = file.path().with_extension("cfg");
+                    let opts_path = opts_path.to_str().unwrap();
+                    let opts = read_to_string(file.path().with_extension("cfg").to_str().unwrap()).ok();
+                    let opts_hasheq = hash_path(&opts, opts_path);
                     let opts = Opts::load_ini(opts, &gopts);
 
-                    let src = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let src = read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+                    let src_hasheq = hash_file(&src, file);
                     let (tem, tem_hasheq) = templates.get(&opts.template).unwrap();
 
-                    let html = placeholder::placeholder_process(&tem, &opts.ini, &gopts.ini, &src);
-                    let html = match html {
-                        Ok(html) => html,
-                        Err(err) => {
-                            eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
-                            exit(1);
-                        },
-                    };
+                    if !(std::path::Path::new(&tar_file).exists() && opts_hasheq && src_hasheq && *tem_hasheq) {
+                        let html = placeholder::placeholder_process(&tem, &opts.ini, &gopts.ini, &src);
+                        let html = match html {
+                            Ok(html) => html,
+                            Err(err) => {
+                                eprintln!("\x1b[1;31mError:\x1b[0m template error: {err}");
+                                exit(1);
+                            },
+                        };
 
-                    let _ = std::fs::create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap());
-                    let _ = std::fs::write(tar_file, html).unwrap();
+                        create_dir_all(std::path::Path::new(&tar_file).parent().unwrap().to_str().unwrap()).unwrap();
+                        write(tar_file, html).unwrap();
+                    }
                 },
                 _ => ()
             }
@@ -97,7 +102,7 @@ fn main() {
     })
 }
 
-fn hash_str(file: &str) -> u64 {
+fn hash<A: Hash>(file: &A) -> u64 {
     let mut hasher = DefaultHasher::new();
     file.hash(&mut hasher);
     hasher.finish()
@@ -105,12 +110,29 @@ fn hash_str(file: &str) -> u64 {
 
 fn get_hash(rel: &str) -> Option<u64> {
     let hash_file = format!("cache/{rel}");
-    let f = std::fs::read(&hash_file).ok()?;
+    let f = read(&hash_file).ok()?;
     Some(u64::from_le_bytes(f.try_into().ok()?))
 }
 
 fn set_hash(rel: &str, hash: u64) {
     let hash_file = format!("cache/{rel}");
-    let _ = std::fs::create_dir_all(std::path::Path::new(&hash_file).parent().unwrap().to_str().unwrap());
-    let _ = std::fs::write(&hash_file, &hash.to_le_bytes()).unwrap();
+    let _ = create_dir_all(std::path::Path::new(&hash_file).parent().unwrap().to_str().unwrap());
+    let _ = write(&hash_file, &hash.to_le_bytes()).unwrap();
+}
+
+fn hash_file<A: Hash>(cont: &A, file: walkdir::DirEntry) -> bool {
+    let rel = if file.path().is_absolute() {
+        file.path().strip_prefix(std::env::current_dir().unwrap()).unwrap().to_str().unwrap()
+    } else {
+        file.path().to_str().unwrap()
+    };
+
+    hash_path(cont, rel)
+}
+
+fn hash_path<A: Hash>(cont: &A, rel: &str) -> bool {
+    let hash = hash(cont);
+    let old_hash = get_hash(rel).unwrap_or(0);
+    set_hash(rel, hash);
+    hash == old_hash
 }
