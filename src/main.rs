@@ -8,6 +8,8 @@ use markdown::html::Opts;
 use walkdir::WalkDir;
 use rayon::prelude::*;
 use std::process::exit;
+use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::hash::{Hash, Hasher};
 
 fn main() {
     let preamble = std::fs::read_to_string("preamble.tex").ok();
@@ -15,6 +17,19 @@ fn main() {
     let gopts = Opts::load_global(global_ini, preamble);
 
     let _ = fs_extra::dir::remove("website");
+    let mut templates = HashMap::new();
+    for file in WalkDir::new("templates").into_iter().filter_map(|file| file.ok()).filter(|file| file.metadata().unwrap().is_file()) {
+        let tem = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
+        let hash = hash_str(&tem);
+        let rel = if file.path().is_absolute() {
+            file.path().strip_prefix(std::env::current_dir().unwrap()).unwrap().to_str().unwrap()
+        } else {
+            file.path().to_str().unwrap()
+        };
+        let old_hash = get_hash(rel).unwrap_or(0);
+        set_hash(rel, hash);
+        templates.insert(file.file_name().to_str().unwrap().to_string(), (tem, hash == old_hash));
+    }
 
     WalkDir::new("markdown").into_iter().par_bridge().filter_map(|file| file.ok()).for_each(|file| {
         if file.metadata().unwrap().is_file() {
@@ -30,7 +45,7 @@ fn main() {
                     let opts = Opts::load_ini(opts, &gopts);
 
                     let md = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
-                    let tem = std::fs::read_to_string(&format!("templates/{}", &opts.template)).unwrap().replace("\r\n", "\n");
+                    let (tem, tem_hasheq) = templates.get(&opts.template).unwrap();
 
                     let html = markdown::html::to_html(&md, &tem, &opts, &gopts);
                     let html = match html {
@@ -52,7 +67,7 @@ fn main() {
                     let opts = Opts::load_ini(opts, &gopts);
 
                     let src = std::fs::read_to_string(file.path()).unwrap().replace("\r\n", "\n");
-                    let tem = std::fs::read_to_string(&format!("templates/{}", &opts.template)).unwrap().replace("\r\n", "\n");
+                    let (tem, tem_hasheq) = templates.get(&opts.template).unwrap();
 
                     let html = placeholder::placeholder_process(&tem, &opts.ini, &gopts.ini, &src);
                     let html = match html {
@@ -80,4 +95,22 @@ fn main() {
             }
         }
     })
+}
+
+fn hash_str(file: &str) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    file.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn get_hash(rel: &str) -> Option<u64> {
+    let hash_file = format!("cache/{rel}");
+    let f = std::fs::read(&hash_file).ok()?;
+    Some(u64::from_le_bytes(f.try_into().ok()?))
+}
+
+fn set_hash(rel: &str, hash: u64) {
+    let hash_file = format!("cache/{rel}");
+    let _ = std::fs::create_dir_all(std::path::Path::new(&hash_file).parent().unwrap().to_str().unwrap());
+    let _ = std::fs::write(&hash_file, &hash.to_le_bytes()).unwrap();
 }
