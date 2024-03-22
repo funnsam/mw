@@ -9,16 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
-name = "fwlang"
-version = "0.1.0"
-dependencies = [
- "html-escape",
- "markdown",
- "serde",
- "toml",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -41,6 +31,16 @@ checksum = "7b0b929d511467233429c45a44ac1dcaa21ba0f5ba11e4879e6ed28ddb4f9df4"
 dependencies = [
  "equivalent",
  "hashbrown",
+]
+
+[[package]]
+name = "makewebsite"
+version = "0.1.0"
+dependencies = [
+ "html-escape",
+ "markdown",
+ "serde",
+ "toml",
 ]
 
 [[package]]

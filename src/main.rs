@@ -17,7 +17,10 @@ fn search(path: PathBuf, options: &compiler::CompileOptions) {
         if f.as_ref().unwrap().metadata().unwrap().is_dir() {
             search(f.unwrap().path(), options);
         } else if f.as_ref().unwrap().path().extension().map_or(false, |ext| ext == "md") {
-            compiler::compile(f.as_ref().unwrap().path(), &String::from_utf8(read(f.unwrap().path()).unwrap()).unwrap(), &options);
+            let mut output_path = f.as_ref().unwrap().path();
+            output_path.set_extension("html");
+
+            compiler::compile(output_path, &String::from_utf8(read(f.unwrap().path()).unwrap()).unwrap(), &options);
         }
     }
 }
