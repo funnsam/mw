@@ -1,0 +1,10 @@
+[package]
+name = "fwlang"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+html-escape = "0.2.13"
+markdown = "1.0.0-alpha"
+serde = { version = "1.0.197", features = ["derive"] }
+toml = { version = "0.8.12", features = ["parse"] }
