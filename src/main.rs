@@ -125,6 +125,4 @@ fn toml_value_to_lua_value<'lua>(v: &toml::Value, lua: &'lua mlua::Lua) -> mlua:
 // ────────────────────────────────────────
 // Lua html generation:
 //  function renerate_final_html(body, options) -> String (write to html)
-//
-//  _G.titlebar (array of titlebar items from titlebar.toml) (example: ["Index", "/", "Cool page",
-//  "heh/something.html"])
+//  _G.titlebar (array of titlebar items from titlebar.toml)
