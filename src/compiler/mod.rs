@@ -1,28 +1,23 @@
-use std::{path::*, fs::*};
 use markdown::{mdast::*, *};
+use std::{fs::*, path::*};
 
 const HTML_ALIGNMENTS: [&'static str; 4] = [
-    r#" style="text-align:left""#,
-    r#" style="text-align:right""#,
-    r#" style="text-align:center""#,
+    r#"style="text-align:left""#,
+    r#"style="text-align:right""#,
+    r#"style="text-align:center""#,
     "",
 ];
-
-mod page_opts;
 
 pub struct CompileOptions {
     pub md_options: ParseOptions,
 }
 
-pub fn compile(path: PathBuf, content: &str, options: &CompileOptions) {
+pub fn compile(content: &str, options: &CompileOptions) -> (String, toml::Table) {
     let ast = to_mdast(content, &options.md_options).unwrap();
 
     let mut html = String::new();
     let popt = to_html(&ast, &mut html).unwrap();
-
-    write(path, format!("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><link rel=\"stylesheet\" href=\"src/style.css\"><title>{}</title></head><body>{html}</body></html>", popt.title)).unwrap();
-
-    println!("{} {:?}", html, popt);
+    (html, popt)
 }
 
 macro_rules! _start_ended_parent {
@@ -44,7 +39,7 @@ macro_rules! _start_ended_value {
     }};
 }
 
-pub fn to_html(ast: &Node, acc: &mut String) -> Option<page_opts::PageOptions> {
+pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
     macro_rules! start_ended_parent {
         ($start: tt $children: tt $end: tt) => {{
             _start_ended_parent!($start $children $end => acc);
@@ -60,35 +55,52 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<page_opts::PageOptions> {
 
     match ast {
         Node::Root(Root { children, .. }) => {
-            let mut opt = page_opts::PageOptions::default();
+            let mut opt = toml::Table::new();
 
             for c in children.iter() {
-                match c {
-                    Node::Toml(Toml { value, .. }) => {
-                        opt = toml::from_str(&value).unwrap();
-                        continue;
-                    },
-                    _ => { to_html(c, acc); },
-                }
+                to_html(c, acc).map(|t| opt = t);
             }
 
             Some(opt)
-        },
-        Node::BlockQuote(BlockQuote { children, .. }) => start_ended_parent!("<blockquote>" children "</blockquote>"),
-        Node::List(List { children, ordered: false, .. }) => start_ended_parent!("<ul>" children "</ul>"),
-        Node::List(List { children, start: Some(s), .. }) => start_ended_parent!("<ol start=\"{s}\">" children "</ol>"),
+        }
+        Node::Toml(Toml { value, .. }) => Some(value.parse().unwrap()),
+        Node::BlockQuote(BlockQuote { children, .. }) => {
+            start_ended_parent!("<blockquote>" children "</blockquote>")
+        }
+        Node::List(List {
+            children,
+            ordered: false,
+            ..
+        }) => start_ended_parent!("<ul>" children "</ul>"),
+        Node::List(List {
+            children,
+            start: Some(s),
+            ..
+        }) => start_ended_parent!("<ol start=\"{s}\">" children "</ol>"),
         Node::InlineCode(InlineCode { value, .. }) => start_ended_value!("<code>" value "</code>"),
         Node::Delete(Delete { children, .. }) => start_ended_parent!("<s>" children "</s>"),
         Node::Emphasis(Emphasis { children, .. }) => start_ended_parent!("<i>" children "</i>"),
         Node::Html(Html { value, .. }) => start_ended_value!("" value ""),
-        Node::Image(Image { alt, url, .. }) => start_ended_value!("<img src=\"{url}\" alt=\"" alt "\">"),
-        Node::Link(Link { children, url, .. }) => start_ended_parent!("<a href=\"{url}\">" children "</a>"),
+        Node::Image(Image { alt, url, .. }) => {
+            start_ended_value!("<img src=\"{url}\" alt=\"" alt "\">")
+        }
+        Node::Link(Link { children, url, .. }) => {
+            start_ended_parent!("<a href=\"{url}\">" children "</a>")
+        }
         Node::Strong(Strong { children, .. }) => start_ended_parent!("<b>" children "</b>"),
         Node::Text(Text { value, .. }) => start_ended_value!("" value ""),
-        Node::Code(Code { value, lang: Some(lang), .. }) => start_ended_value!("<pre><code class=\"language-{lang}\">" value "</code></pre>"),
+        Node::Code(Code {
+            value,
+            lang: Some(lang),
+            ..
+        }) => start_ended_value!("<pre><code class=\"language-{lang}\">" value "</code></pre>"),
         Node::Code(Code { value, .. }) => start_ended_value!("<pre><code>" value "</code></pre>"),
-        Node::Heading(Heading { children, depth, .. }) => start_ended_parent!("<h{depth}>" children "</h{depth}>"),
-        Node::Table(Table { children, align, .. }) => {
+        Node::Heading(Heading {
+            children, depth, ..
+        }) => start_ended_parent!("<h{depth}>" children "</h{depth}>"),
+        Node::Table(Table {
+            children, align, ..
+        }) => {
             *acc += "<table>";
 
             for (i, c) in children.iter().enumerate() {
@@ -98,18 +110,30 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<page_opts::PageOptions> {
             *acc += "</table>";
 
             None
-        },
-        Node::ListItem(ListItem { children, checked: Some(true), .. }) => start_ended_parent!(
+        }
+        Node::ListItem(ListItem {
+            children,
+            checked: Some(true),
+            ..
+        }) => start_ended_parent!(
             "<input type=\"checkbox\" checked disabled=\"disabled\"><li>"
             children
             "</li>"
         ),
-        Node::ListItem(ListItem { children, checked: Some(_), .. }) => start_ended_parent!(
+        Node::ListItem(ListItem {
+            children,
+            checked: Some(_),
+            ..
+        }) => start_ended_parent!(
             "<input type=\"checkbox\" disabled=\"disabled\"><li>"
             children
             "</li>"
         ),
-        Node::ListItem(ListItem { children, checked: None, .. }) => start_ended_parent!("<li>" children "</li>"),
+        Node::ListItem(ListItem {
+            children,
+            checked: None,
+            ..
+        }) => start_ended_parent!("<li>" children "</li>"),
         Node::Paragraph(Paragraph { children, .. }) => start_ended_parent!("" children "<br>"),
         _ => todo!("{ast:?}"),
     }
@@ -125,17 +149,23 @@ fn table_rows_to_html(ast: &Node, acc: &mut String, is_first_row: bool, alignmen
             }
 
             *acc += "</tr>";
-        },
-        // Node::TableCell(TableCell { children, .. }) if is_first_row => start_ended_parent!("<th>" children "</th>"),
-        // Node::TableCell(TableCell { children, .. }) => start_ended_parent!("<td>" children "</td>"),
-        _ => { to_html(ast, acc); },
+        }
+        _ => {
+            to_html(ast, acc);
+        }
     }
 }
 
 fn table_cells_to_html(ast: &Node, acc: &mut String, is_first_row: bool, alignment: &str) {
     match ast {
-        Node::TableCell(TableCell { children, .. }) if is_first_row => _start_ended_parent!("<th{alignment}>" children "</th>" => acc),
-        Node::TableCell(TableCell { children, .. }) => _start_ended_parent!("<td{alignment}>" children "</td>" => acc),
-        _ => { to_html(ast, acc); },
+        Node::TableCell(TableCell { children, .. }) if is_first_row => {
+            _start_ended_parent!("<th {alignment}>" children "</th>" => acc)
+        }
+        Node::TableCell(TableCell { children, .. }) => {
+            _start_ended_parent!("<td {alignment}>" children "</td>" => acc)
+        }
+        _ => {
+            to_html(ast, acc);
+        }
     }
 }

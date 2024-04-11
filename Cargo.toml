@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 html-escape = "0.2.13"
 markdown = "1.0.0-alpha"
+mlua = { version = "0.9.7", features = ["lua54"] }
 serde = { version = "1.0.197", features = ["derive"] }
 toml = { version = "0.8.12", features = ["parse"] }

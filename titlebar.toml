@@ -1,0 +1,3 @@
+titlebar = [
+	{ name = "Index", url = "/" }
+]
