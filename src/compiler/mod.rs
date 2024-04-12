@@ -1,5 +1,5 @@
+use crate::log::LoggedUnwrap;
 use markdown::{mdast::*, *};
-use std::{fs::*, path::*};
 
 const HTML_ALIGNMENTS: [&'static str; 4] = [
     r#"style="text-align:left""#,
@@ -13,10 +13,10 @@ pub struct CompileOptions {
 }
 
 pub fn compile(content: &str, options: &CompileOptions) -> (String, toml::Table) {
-    let ast = to_mdast(content, &options.md_options).unwrap();
+    let ast = to_mdast(content, &options.md_options).logged_unwrap();
 
     let mut html = String::new();
-    let popt = to_html(&ast, &mut html).unwrap();
+    let popt = to_html(&ast, &mut html).logged_unwrap();
     (html, popt)
 }
 
@@ -63,7 +63,7 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
 
             Some(opt)
         }
-        Node::Toml(Toml { value, .. }) => Some(value.parse().unwrap()),
+        Node::Toml(Toml { value, .. }) => Some(value.parse().logged_unwrap()),
         Node::BlockQuote(BlockQuote { children, .. }) => {
             start_ended_parent!("<blockquote>" children "</blockquote>")
         }

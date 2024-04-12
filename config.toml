@@ -1,0 +1,8 @@
+[navbar]
+left = [
+	{ name = "Home", url = "/" },
+	{ name = "Documentation", url = "/docs/" },
+]
+right = [
+	{ name = "Github", url = "https://github.com/funnsam/mw" },
+]

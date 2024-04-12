@@ -1,0 +1,67 @@
+:root {
+	--margin-xs: 0.15rem;
+	--margin-s: 0.2745rem;
+	--margin-m: 0.4077rem;
+	--margin-l: 1.108rem;
+
+	--color-primary-fg: #8be99a;
+	--color-primary-bg: #19862b;
+	--color-normal-fg: #fbfbfb;
+	--color-normal-bg: #2f3431;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	color: var(--color-normal-fg);
+	background-color: var(--color-normal-bg);
+}
+
+nav {
+	border-bottom: var(--margin-xs) solid var(--color-primary-fg);
+	margin: 0;
+	padding: 0;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	overflow: hidden;
+}
+
+span#nav_left > a {
+	float: left;
+}
+
+span#nav_right > a {
+	float: right;
+}
+
+nav > span#nav_left > a, nav > span#nav_right > a {
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	padding: var(--margin-m);
+	color: var(--color-normal-fg);
+}
+
+div#page_content {
+	margin-top: calc(var(--margin-m) * 2 + 1rem);
+	padding: var(--margin-l);
+}
+
+h1 {
+	margin-bottom: var(--margin-l);
+}
+
+h2 {
+	margin-bottom: var(--margin-m);
+}
+
+h3 {
+	margin-bottom: var(--margin-s);
+}
+
+h4, h5, h6 {
+	margin-bottom: var(--margin-xs);
+}
+
