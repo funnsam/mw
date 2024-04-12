@@ -1,11 +1,21 @@
-:root {
-	--margin-xs: 0.15rem;
-	--margin-s: 0.2745rem;
-	--margin-m: 0.4077rem;
-	--margin-l: 1.108rem;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
-	--color-primary-fg: #8be99a;
-	--color-primary-bg: #19862b;
+:root {
+	/*
+	LIGHT:
+	 2^(x + 2)
+	-----------
+	    10
+	*/
+	--margin-xs: 0.4rem;
+	--margin-s: 0.566rem;
+	--margin-m: 0.8rem;
+	--margin-l: 1.131rem;
+	--margin-xl: 1.6rem;
+	--margin-xxl: 2.263rem;
+
+	--color-primary-fg: #d3ffda;
+	--color-primary-bg: #0b5918;
 	--color-normal-fg: #fbfbfb;
 	--color-normal-bg: #2f3431;
 }
@@ -16,6 +26,8 @@ html, body {
 	width: 100%;
 	color: var(--color-normal-fg);
 	background-color: var(--color-normal-bg);
+	font-family: "Inter", "Roboto", "Arial", sans-serif;
+	line-height: 1.5;
 }
 
 nav {
@@ -26,6 +38,9 @@ nav {
 	top: 0;
 	width: 100%;
 	overflow: hidden;
+	background-color: color-mix(in srgb, var(--color-normal-bg) 50%, transparent);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
 }
 
 span#nav_left > a {
@@ -36,7 +51,7 @@ span#nav_right > a {
 	float: right;
 }
 
-nav > span#nav_left > a, nav > span#nav_right > a {
+nav > span > a {
 	display: block;
 	text-align: center;
 	text-decoration: none;
@@ -44,24 +59,40 @@ nav > span#nav_left > a, nav > span#nav_right > a {
 	color: var(--color-normal-fg);
 }
 
+a {
+	color: var(--color-primary-fg);
+}
+
+nav > span > a:hover {
+	text-decoration: underline;
+}
+
+nav > span > a#active {
+	color: var(--color-primary-fg);
+	background-color: var(--color-primary-bg);
+}
+
 div#page_content {
-	margin-top: calc(var(--margin-m) * 2 + 1rem);
+	margin-top: calc(var(--margin-m) * 2 + var(--margin-xs) + var(--margin-s));
 	padding: var(--margin-l);
 }
 
 h1 {
+	margin-top: 0;
 	margin-bottom: var(--margin-l);
 }
 
 h2 {
+	margin-top: 0;
 	margin-bottom: var(--margin-m);
 }
 
-h3 {
+h3, h4, h5, h6 {
+	margin-top: 0;
 	margin-bottom: var(--margin-s);
 }
 
-h4, h5, h6 {
-	margin-bottom: var(--margin-xs);
+p {
+	margin-top: 0;
+	margin-bottom: var(--margin-s);
 }
-

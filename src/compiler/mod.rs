@@ -134,7 +134,7 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
             checked: None,
             ..
         }) => start_ended_parent!("<li>" children "</li>"),
-        Node::Paragraph(Paragraph { children, .. }) => start_ended_parent!("" children "<br>"),
+        Node::Paragraph(Paragraph { children, .. }) => start_ended_parent!("<p>" children "</p>"),
         _ => todo!("{ast:?}"),
     }
 }

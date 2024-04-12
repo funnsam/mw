@@ -1,7 +1,7 @@
 [navbar]
 left = [
-	{ name = "Home", url = "/" },
-	{ name = "Documentation", url = "/docs/" },
+	{ name = "Home", url = "/", md = "index.md" },
+	{ name = "Documentation", url = "/docs/", md = "docs/index.md" },
 ]
 right = [
 	{ name = "Github", url = "https://github.com/funnsam/mw" },

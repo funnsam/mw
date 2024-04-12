@@ -32,7 +32,6 @@ fn main() {
         .exec()
         .logged_unwrap();
 
-    create_dir_all("output").logged_unwrap();
     search(
         std::env::current_dir().logged_unwrap().join("pages"),
         std::env::current_dir().logged_unwrap().join("output"),
@@ -70,7 +69,7 @@ fn search(
         } else {
             match p.extension().and_then(|a| a.to_str()) {
                 Some("md") => {
-                    let out = output_path.join(last).with_extension("html");
+                    let out = output_path.clone().join(last).with_extension("html");
 
                     let (body, raw_opts) = compiler::compile(
                         &String::from_utf8(read(f.logged_unwrap().path()).logged_unwrap()).logged_unwrap(),
@@ -79,12 +78,16 @@ fn search(
                     let opts = toml_table_to_lua_table(&raw_opts, lua);
 
                     let result = tem.call::<_, String>((p.to_str().logged_unwrap(), depth, body, opts)).logged_unwrap();
+
+                    create_dir_all(&output_path).logged_unwrap();
                     write(out, result).logged_unwrap();
                 },
                 Some(_) if p.file_name().and_then(|a| a.to_str()).unwrap_or("").contains(".copy.") => {
+                    create_dir_all(&output_path).logged_unwrap();
                     write(output_path.join(last.replace(".copy", "")), read(p).logged_unwrap()).logged_unwrap();
                 }
                 Some("copy") => {
+                    create_dir_all(&output_path).logged_unwrap();
                     write(output_path.join(last).with_extension(""), read(p).logged_unwrap()).logged_unwrap();
                 }
                 _ => warn!("found unknown type of file (`{}`) (note: use `.copy` before file extension to copy the file to output directory.)", p.display()),
