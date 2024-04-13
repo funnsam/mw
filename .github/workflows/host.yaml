@@ -23,6 +23,7 @@ jobs:
           sudo apt install liblua5.4-dev -y
       - name: Build page
         run: |
+          cd ..
           cargo r -j8
       - name: Upload page
         uses: actions/upload-pages-artifact@v3
