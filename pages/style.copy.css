@@ -31,13 +31,14 @@ html, body {
 }
 
 nav {
-	border-bottom: var(--margin-xs) solid var(--color-primary-fg);
 	margin: 0;
 	padding: 0;
 	position: fixed;
 	top: 0;
 	width: 100%;
 	overflow: hidden;
+	z-index: 999999999;
+	border-bottom: var(--margin-xs) solid var(--color-primary-fg);
 	background-color: color-mix(in srgb, var(--color-normal-bg) 50%, transparent);
 	backdrop-filter: blur(5px);
 	-webkit-backdrop-filter: blur(5px);
@@ -63,7 +64,7 @@ a {
 	color: var(--color-primary-fg);
 }
 
-nav > span > a:hover {
+nav > span > a:link:hover {
 	text-decoration: underline;
 }
 
@@ -93,6 +94,7 @@ h3, h4, h5, h6 {
 }
 
 p {
+	text-align: justify;
 	margin-top: 0;
-	margin-bottom: var(--margin-s);
+	margin-bottom: var(--margin-m);
 }

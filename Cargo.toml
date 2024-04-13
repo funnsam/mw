@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 html-escape = "0.2.13"
+katex = "0.4.6"
 markdown = "1.0.0-alpha"
 mlua = { version = "0.9.7", features = ["lua54"] }
 serde = { version = "1.0.197", features = ["derive"] }

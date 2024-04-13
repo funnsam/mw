@@ -78,6 +78,18 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
             ..
         }) => start_ended_parent!("<ol start=\"{s}\">" children "</ol>"),
         Node::InlineCode(InlineCode { value, .. }) => start_ended_value!("<code>" value "</code>"),
+        Node::InlineMath(InlineMath { value, .. }) => {
+            let opts = katex::Opts::builder()
+                .display_mode(false)
+                .output_type(katex::OutputType::Html)
+                .throw_on_error(true)
+                .trust(true)
+                .build()
+                .logged_unwrap();
+            *acc += &katex::render_with_opts(value, opts).logged_unwrap();
+
+            None
+        },
         Node::Delete(Delete { children, .. }) => start_ended_parent!("<s>" children "</s>"),
         Node::Emphasis(Emphasis { children, .. }) => start_ended_parent!("<i>" children "</i>"),
         Node::Html(Html { value, .. }) => start_ended_value!("" value ""),
@@ -95,6 +107,18 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
             ..
         }) => start_ended_value!("<pre><code class=\"language-{lang}\">" value "</code></pre>"),
         Node::Code(Code { value, .. }) => start_ended_value!("<pre><code>" value "</code></pre>"),
+        Node::Math(Math { value, .. }) => {
+            let opts = katex::Opts::builder()
+                .output_type(katex::OutputType::Html)
+                .display_mode(true)
+                .throw_on_error(true)
+                .trust(true)
+                .build()
+                .logged_unwrap();
+            *acc += &katex::render_with_opts(value, opts).logged_unwrap();
+
+            None
+        },
         Node::Heading(Heading {
             children, depth, ..
         }) => start_ended_parent!("<h{depth}>" children "</h{depth}>"),

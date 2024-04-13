@@ -12,8 +12,9 @@ fn main() {
 
     options.md_options.constructs.frontmatter = true;
     options.md_options.constructs.math_text = true;
+    options.md_options.constructs.math_flow = true;
 
-    let lua = mlua::Lua::new();
+    let lua = unsafe { mlua::Lua::unsafe_new() };
     let globals = lua.globals();
 
     let config = &read_to_string("./config.toml")
@@ -27,8 +28,10 @@ fn main() {
             .logged_unwrap();
     }
 
-    lua.load(read("./templates.lua").logged_unwrap())
-        .set_name("templates.lua")
+    globals.set("project_base", std::env::current_dir().logged_unwrap().to_str()).logged_unwrap();
+
+    lua.load(read("./postprocess.lua").logged_unwrap())
+        .set_name("postprocess.lua")
         .exec()
         .logged_unwrap();
 
@@ -77,7 +80,12 @@ fn search(
                     );
                     let opts = toml_table_to_lua_table(&raw_opts, lua);
 
-                    let result = tem.call::<_, String>((p.to_str().logged_unwrap(), depth, body, opts)).logged_unwrap();
+                    let result = tem.call::<_, String>((
+                        p.to_str().logged_unwrap(),
+                        depth,
+                        body,
+                        opts
+                    )).logged_unwrap();
 
                     create_dir_all(&output_path).logged_unwrap();
                     write(out, result).logged_unwrap();
@@ -141,6 +149,6 @@ fn toml_value_to_lua_value<'lua>(v: &toml::Value, lua: &'lua mlua::Lua) -> mlua:
 // ├─ pages
 // │  └─ xx.md or .copy.xxx
 // ├─ config.toml: config file passed into lua
-// ├─ templates.lua: final html generation
+// ├─ postprocess.lua: final html generation
 // └─ output
 //    └─ output.html s
