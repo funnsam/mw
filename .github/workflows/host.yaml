@@ -1,0 +1,33 @@
+name: "Build and deploy page"
+
+on: push
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build_and_deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get dependencies
+        run: |
+          apt install liblua5.4-dev -y
+      - name: Build page
+        run: |
+          cargo r -j8
+      - name: Upload page
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: output
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
