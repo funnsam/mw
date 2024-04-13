@@ -1,12 +1,14 @@
 name: "Build page by mkwebsite"
 description: "Build page using the `mkwebsite` tool."
-inputs:
 runs:
   using: "composite"
   steps:
     - name: Install dependencies
       run: sudo apt install liblua5.4-dev -y
+      shell: bash
     - name: Install mkwebsite
       run: cargo install mkwebsite
+      shell: bash
     - name: Build page
       run: mkwebsite
+      shell: bash
