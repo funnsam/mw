@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Get dependencies
         run: |
-          apt install liblua5.4-dev -y
+          sudo apt install liblua5.4-dev -y
       - name: Build page
         run: |
           cargo r -j8
