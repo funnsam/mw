@@ -7,7 +7,12 @@ local function to_rel_url(url, depth)
 	if string.match(url, "(.+\\://|\\./|/).*") then
 		return url
 	else
-		return string.rep("../", depth) .. url
+		local url = string.rep("../", depth) .. url
+		if #url ~= 0 then
+			return url
+		else
+			return "./"
+		end
 	end
 end
 

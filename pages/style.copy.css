@@ -14,18 +14,18 @@
 	--margin-xl: 1.6rem;
 	--margin-xxl: 2.263rem;
 
-	--color-primary-fg: #d3ffda;
-	--color-primary-bg: #0b5918;
-	--color-normal-fg: #fbfbfb;
-	--color-normal-bg: #2f3431;
+	--color-primary: #d3ffda;
+	--color-primary-dim: #0b5918;
+	--color-normal: #fbfbfb;
+	--color-normal-dim: #2f3431;
 }
 
 html, body {
 	margin: 0;
 	padding: 0;
 	width: 100%;
-	color: var(--color-normal-fg);
-	background-color: var(--color-normal-bg);
+	color: var(--color-normal);
+	background-color: var(--color-normal-dim);
 	font-family: "Inter", "Roboto", "Arial", sans-serif;
 	line-height: 1.5;
 }
@@ -38,8 +38,8 @@ nav {
 	width: 100%;
 	overflow: hidden;
 	z-index: 999999999;
-	border-bottom: var(--margin-xs) solid var(--color-primary-fg);
-	background-color: color-mix(in srgb, var(--color-normal-bg) 50%, transparent);
+	border-bottom: var(--margin-xs) solid var(--color-primary);
+	background-color: color-mix(in srgb, var(--color-normal-dim) 50%, transparent);
 	backdrop-filter: blur(5px);
 	-webkit-backdrop-filter: blur(5px);
 }
@@ -57,11 +57,11 @@ nav > span > a {
 	text-align: center;
 	text-decoration: none;
 	padding: var(--margin-m);
-	color: var(--color-normal-fg);
+	color: var(--color-normal);
 }
 
 a {
-	color: var(--color-primary-fg);
+	color: var(--color-primary);
 }
 
 nav > span > a:link:hover {
@@ -69,8 +69,9 @@ nav > span > a:link:hover {
 }
 
 nav > span > a#active {
-	color: var(--color-primary-fg);
-	background-color: var(--color-primary-bg);
+	color: var(--color-primary-dim);
+	background-color: var(--color-primary);
+	border-radius: var(--margin-s) var(--margin-s) 0 0;
 }
 
 div#page_content {
