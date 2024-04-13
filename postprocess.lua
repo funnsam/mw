@@ -4,7 +4,7 @@ local function get_rel_path(path)
 end
 
 local function to_rel_url(url, depth)
-	if string.match(url, "(.+\\://|\\./|/).*") then
+	if string.match(url, "^.+://.*") or string.match(url, "^%./.*") or string.match(url, "^/.*") then
 		return url
 	else
 		local url = string.rep("../", depth) .. url
