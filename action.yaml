@@ -1,4 +1,4 @@
-name: "Build page"
+name: "Build page by mkwebsite"
 description: "Build page using the `mkwebsite` tool."
 inputs:
 runs:
