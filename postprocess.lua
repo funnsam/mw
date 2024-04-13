@@ -3,6 +3,14 @@ local function get_rel_path(path)
 	return string.sub(path, #project_base + #"/pages/" + 1)
 end
 
+local function to_rel_url(url, depth)
+	if string.match(url, "(.+\\://|\\./|/).*") then
+		return url
+	else
+		return string.rep("../", depth) .. url
+	end
+end
+
 -- `path` is the full path of the markdown file
 -- `depth` is the depth of the file
 -- `body` is the compiled HTML
@@ -22,7 +30,7 @@ function generate_final_html(path, depth, body, options)
 		if item.md == get_rel_path(path) then
 			nb_left = nb_left .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
-			nb_left = nb_left .. string.format("<a href=\"%s\">%s</a>", item.url, item.name)
+			nb_left = nb_left .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
 		end
 	end
 
@@ -32,7 +40,7 @@ function generate_final_html(path, depth, body, options)
 		if item.md == get_rel_path(path) then
 			nb_right = nb_right .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
-			nb_right = nb_right .. string.format("<a href=\"%s\">%s</a>", item.url, item.name)
+			nb_right = nb_right .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
 		end
 	end
 
