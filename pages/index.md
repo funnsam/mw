@@ -2,7 +2,7 @@
 title = "Home"
 +++
 
-# Hey there! Welcome to this page!
+# Hey there! :wave: Welcome to this page!
 ## Example h2
 Flow math:
 $$

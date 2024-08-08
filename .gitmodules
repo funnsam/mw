@@ -1,0 +1,3 @@
+[submodule "rust-emojicons"]
+	path = rust-emojicons
+	url = git@github.com:funnsam/rust-emojicons

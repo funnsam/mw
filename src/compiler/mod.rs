@@ -100,7 +100,10 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
             start_ended_parent!("<a href=\"{url}\">" children "</a>")
         }
         Node::Strong(Strong { children, .. }) => start_ended_parent!("<b>" children "</b>"),
-        Node::Text(Text { value, .. }) => start_ended_value!("" value ""),
+        Node::Text(Text { value, .. }) => {
+            *acc += &html_escape::encode_text(&emojicons::EmojiFormatter(value).to_string());
+            None
+        },
         Node::Code(Code {
             value,
             lang: Some(lang),
