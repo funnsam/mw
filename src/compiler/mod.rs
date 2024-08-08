@@ -101,7 +101,7 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
         }
         Node::Strong(Strong { children, .. }) => start_ended_parent!("<b>" children "</b>"),
         Node::Text(Text { value, .. }) => {
-            *acc += &html_escape::encode_text(&emojicons::EmojiFormatter(value).to_string());
+            *acc += &html_escape::encode_text(&emojicons_2021::EmojiFormatter(value).to_string());
             None
         },
         Node::Code(Code {
