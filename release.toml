@@ -4,4 +4,3 @@ pre-release-replacements = [
     { file="CHANGELOG.md", search="# Unreleased", replace="# {{version}}" },
     { file="CHANGELOG.md", search="<!-- updated by cargo-release -->", replace="<!-- updated by cargo-release -->\n\n# Unreleased" },
 ]
-pre-release-hook = ["git", "tag", "v{{version}}"]
