@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+
+# 0.3.0
 ## Lua API
 - Added `path_parent`, `path_relative` and `search_in` global functions
 - Changed `generate_final_html` to pass in the output path as well
