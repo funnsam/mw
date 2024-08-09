@@ -1,3 +1,5 @@
+#![allow(unused_macros)]
+
 macro_rules! info {
     ($($fmt: tt)*) => {
         println!("\x1b[1;32mInfo:\x1b[0m {}", format!($($fmt)*))

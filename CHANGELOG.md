@@ -1,6 +1,9 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+## Lua API
+- `search_in` added the `depth` parameter
+- `config.toml` exported variables are now under the global `config` table
 
 # 0.3.0
 ## Lua API

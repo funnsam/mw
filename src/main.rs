@@ -26,12 +26,7 @@ fn main() {
         .logged_unwrap()
         .parse::<toml::Table>()
         .logged_unwrap();
-
-    for (k, v) in config.iter() {
-        globals
-            .set(k.as_str(), toml_value_to_lua_value(v, &lua))
-            .logged_unwrap();
-    }
+    globals.set("config", toml_table_to_lua_table(config, &lua)).logged_unwrap();
 
     globals.set("project_base", std::env::current_dir().logged_unwrap().to_str()).logged_unwrap();
 
@@ -60,14 +55,14 @@ fn main() {
         )
     });
 
-    lua_fn!(search_in = |lua, (md_path, out_path): (String, String)| {
+    lua_fn!(search_in = |lua, (md_path, out_path, depth): (String, String, _)| {
         let mut opts = vec![];
 
         search(
             PathBuf::from_str(&md_path).logged_unwrap(),
             PathBuf::from_str(&out_path).logged_unwrap(),
             lua,
-            0,
+            depth,
             &mut opts,
         );
 
