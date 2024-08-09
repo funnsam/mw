@@ -1,11 +1,12 @@
-use std::{fs::*, path::*};
+use std::{fs::*, path::*, str::FromStr};
 
 mod compiler;
 #[macro_use]
 mod log;
 use log::LoggedUnwrap;
+use mlua::Function;
 
-fn main() {
+fn get_options() -> compiler::CompileOptions {
     let mut options = compiler::CompileOptions {
         md_options: markdown::ParseOptions::gfm(),
     };
@@ -14,6 +15,10 @@ fn main() {
     options.md_options.constructs.math_text = true;
     options.md_options.constructs.math_flow = true;
 
+    options
+}
+
+fn main() {
     let lua = unsafe { mlua::Lua::unsafe_new() };
     let globals = lua.globals();
 
@@ -30,6 +35,45 @@ fn main() {
 
     globals.set("project_base", std::env::current_dir().logged_unwrap().to_str()).logged_unwrap();
 
+    macro_rules! lua_fn {
+        ($id: ident = $fn: expr) => {
+            let func = lua.create_function($fn).logged_unwrap();
+            globals.set(stringify!($id), func).logged_unwrap();
+        };
+    }
+
+    lua_fn!(path_parent = |_lua, path: String| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .parent().logged_unwrap()
+                .to_str().logged_unwrap()
+                .to_string()
+        )
+    });
+
+    lua_fn!(path_relative = |_lua, path: String| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .strip_prefix(std::env::current_dir().logged_unwrap()).logged_unwrap()
+                .to_str().logged_unwrap()
+                .to_string()
+        )
+    });
+
+    lua_fn!(search_in = |lua, (md_path, out_path): (String, String)| {
+        let mut opts = vec![];
+
+        search(
+            PathBuf::from_str(&md_path).logged_unwrap(),
+            PathBuf::from_str(&out_path).logged_unwrap(),
+            lua,
+            0,
+            &mut opts,
+        );
+
+        Ok(opts)
+    });
+
     lua.load(read("./postprocess.lua").logged_unwrap())
         .set_name("postprocess.lua")
         .exec()
@@ -38,20 +82,18 @@ fn main() {
     search(
         std::env::current_dir().logged_unwrap().join("pages"),
         std::env::current_dir().logged_unwrap().join("output"),
-        &options,
         &lua,
-        &globals.get("generate_final_html").logged_unwrap(),
         0,
+        &mut vec![],
     );
 }
 
-fn search(
+fn search<'a>(
     pages_path: PathBuf,
     output_path: PathBuf,
-    options: &compiler::CompileOptions,
-    lua: &mlua::Lua,
-    tem: &mlua::Function,
+    lua: &'a mlua::Lua,
     depth: usize,
+    pages: &mut Vec<mlua::Table<'a>>,
 ) {
     for f in std::fs::read_dir(pages_path).logged_unwrap() {
         let p = f.as_ref().logged_unwrap().path();
@@ -68,7 +110,7 @@ fn search(
             .logged_unwrap()
             .is_dir()
         {
-            search(p, output_path.join(last), options, lua, tem, depth + 1);
+            search(p, output_path.join(last), lua, depth + 1, pages);
         } else {
             match p.extension().and_then(|a| a.to_str()) {
                 Some("md") => {
@@ -76,16 +118,23 @@ fn search(
 
                     let (body, raw_opts) = compiler::compile(
                         &String::from_utf8(read(f.logged_unwrap().path()).logged_unwrap()).logged_unwrap(),
-                        &options,
+                        &get_options(),
                     );
                     let opts = toml_table_to_lua_table(&raw_opts, lua);
 
-                    let result = tem.call::<_, String>((
+                    let result = lua.globals().get::<_, Function>("generate_final_html").logged_unwrap().call::<_, String>((
                         p.to_str().logged_unwrap(),
+                        out.to_str().logged_unwrap(),
                         depth,
                         body,
-                        opts
+                        &opts,
                     )).logged_unwrap();
+
+                    let page = lua.create_table().logged_unwrap();
+                    page.set("md_path", p.to_str().logged_unwrap()).logged_unwrap();
+                    page.set("out_path", out.to_str().logged_unwrap()).logged_unwrap();
+                    page.set("options", opts).logged_unwrap();
+                    pages.push(page);
 
                     create_dir_all(&output_path).logged_unwrap();
                     write(out, result).logged_unwrap();

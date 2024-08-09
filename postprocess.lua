@@ -1,8 +1,3 @@
-local function get_rel_path(path)
-	-- The project base location is in the global variable `project_base`.
-	return string.sub(path, #project_base + #"/pages/" + 1)
-end
-
 local function to_rel_url(url, depth)
 	if string.match(url, "^.+://.*") or string.match(url, "^%./.*") or string.match(url, "^/.*") then
 		return url
@@ -16,13 +11,14 @@ local function to_rel_url(url, depth)
 	end
 end
 
--- `path` is the full path of the markdown file
+-- `md_path` is the full path of the markdown file
+-- `out_path` is the full path of the output HTML file
 -- `depth` is the depth of the file
 -- `body` is the compiled HTML
 -- `options` is the per-file options
 --
 -- This global function should return a string of the final HTML
-function generate_final_html(path, depth, body, options)
+function generate_final_html(md_path, out_path, depth, body, options)
 	local title_html = ""
 	if options.title ~= nil then
 		title_html = string.format("<title>%s</title>", options.title)
@@ -32,7 +28,7 @@ function generate_final_html(path, depth, body, options)
 	local nb_left = ""
 	for item = 1, #navbar.left do
 		local item = navbar.left[item]
-		if item.md == get_rel_path(path) then
+		if item.md ~= nil and "pages/" .. item.md == path_relative(md_path) then
 			nb_left = nb_left .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
 			nb_left = nb_left .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
@@ -42,12 +38,21 @@ function generate_final_html(path, depth, body, options)
 	local nb_right = ""
 	for item = 1, #navbar.right do
 		local item = navbar.right[item]
-		if item.md == get_rel_path(path) then
+		if item.md ~= nil and "pages/" .. item.md == path_relative(md_path) then
 			nb_right = nb_right .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
 			nb_right = nb_right .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
 		end
 	end
+
+    if options.search_elsewhere then
+        local opts = search_in(project_base .. "/elsewhere", path_parent(out_path))
+        -- for i = 1, #opts do
+        --     print(opts[i].md_path)
+        --     print(opts[i].out_path)
+        --     print(opts[i].options.title)
+        -- end
+    end
 
 	-- KaTeX CSS should be imported for optimal inline math support
 	return string.format([[
