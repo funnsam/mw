@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+
+# 0.4.1
 ## Lua API
 - Added `path_relative_to`, `path_filename`, `path_extension`, `path_join`, `path_with_filename` and `path_with_extension` as path helpers
 - `path_parent` and `path_relative` now returns `nil` when erroring instead of producing weird error
