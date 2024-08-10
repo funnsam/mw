@@ -1,6 +1,11 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+## Lua API
+- Added `path_relative_to`, `path_filename`, `path_extension`, `path_join`, `path_with_filename` and `path_with_extension` as path helpers
+- `path_parent` and `path_relative` now returns `nil` when erroring instead of producing weird error
+- `search_in` now accept `nil` as `depth`
+- The base of the `pages` and `output` directories are now in the `pages_base` and `output_base` global variables
 
 # 0.4.0
 ## Lua API

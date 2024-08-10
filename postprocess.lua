@@ -28,7 +28,7 @@ function generate_final_html(md_path, out_path, depth, body, options)
 	local nb_left = ""
 	for item = 1, #config.navbar.left do
 		local item = config.navbar.left[item]
-		if item.md ~= nil and "pages/" .. item.md == path_relative(md_path) then
+		if item.md ~= nil and item.md == path_relative_to(md_path, pages_base) then
 			nb_left = nb_left .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
 			nb_left = nb_left .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
@@ -38,7 +38,7 @@ function generate_final_html(md_path, out_path, depth, body, options)
 	local nb_right = ""
 	for item = 1, #config.navbar.right do
 		local item = config.navbar.right[item]
-		if item.md ~= nil and "pages/" .. item.md == path_relative(md_path) then
+		if item.md ~= nil and item.md == path_relative_to(md_path, pages_base) then
 			nb_right = nb_right .. string.format("<a id=\"active\">%s</a>", item.name)
 		else
 			nb_right = nb_right .. string.format("<a href=\"%s\">%s</a>", to_rel_url(item.url, depth), item.name)
@@ -46,7 +46,7 @@ function generate_final_html(md_path, out_path, depth, body, options)
 	end
 
     if options.search_elsewhere then
-        local opts = search_in(project_base .. "/elsewhere", path_parent(out_path), depth)
+        local opts = search_in(path_join(project_base, "elsewhere"), path_parent(out_path), depth)
         -- for i = 1, #opts do
         --     print(opts[i].md_path)
         --     print(opts[i].out_path)

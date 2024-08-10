@@ -28,8 +28,6 @@ fn main() {
         .logged_unwrap();
     globals.set("config", toml_table_to_lua_table(config, &lua)).logged_unwrap();
 
-    globals.set("project_base", std::env::current_dir().logged_unwrap().to_str()).logged_unwrap();
-
     macro_rules! lua_fn {
         ($id: ident = $fn: expr) => {
             let func = lua.create_function($fn).logged_unwrap();
@@ -40,34 +38,92 @@ fn main() {
     lua_fn!(path_parent = |_lua, path: String| {
         Ok(
             PathBuf::from_str(&path).logged_unwrap()
-                .parent().logged_unwrap()
-                .to_str().logged_unwrap()
-                .to_string()
+                .parent()
+                .map(|p| p.to_str().logged_unwrap().to_string())
         )
     });
 
     lua_fn!(path_relative = |_lua, path: String| {
         Ok(
             PathBuf::from_str(&path).logged_unwrap()
-                .strip_prefix(std::env::current_dir().logged_unwrap()).logged_unwrap()
+                .strip_prefix(std::env::current_dir().logged_unwrap())
+                .map(|p| p.to_str().logged_unwrap().to_string())
+                .ok()
+        )
+    });
+
+    lua_fn!(path_relative_to = |_lua, (path, root): (String, String)| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .strip_prefix(&root)
+                .map(|p| p.to_str().logged_unwrap().to_string())
+                .ok()
+        )
+    });
+
+    lua_fn!(path_filename = |_lua, path: String| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .file_name()
+                .map(|p| p.to_str().logged_unwrap().to_string())
+        )
+    });
+
+    lua_fn!(path_extension = |_lua, path: String| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .extension()
+                .map(|p| p.to_str().logged_unwrap().to_string())
+        )
+    });
+
+    lua_fn!(path_join = |_lua, (base, path): (String, String)| {
+        Ok(
+            PathBuf::from_str(&base).logged_unwrap()
+                .join(&path)
                 .to_str().logged_unwrap()
                 .to_string()
         )
     });
 
-    lua_fn!(search_in = |lua, (md_path, out_path, depth): (String, String, _)| {
+    lua_fn!(path_with_filename = |_lua, (path, filename): (String, String)| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .with_file_name(&filename)
+                .to_str().logged_unwrap()
+                .to_string()
+        )
+    });
+
+    lua_fn!(path_with_extension = |_lua, (path, ext): (String, String)| {
+        Ok(
+            PathBuf::from_str(&path).logged_unwrap()
+                .with_extension(&ext)
+                .to_str().logged_unwrap()
+                .to_string()
+        )
+    });
+
+    lua_fn!(search_in = |lua, (md_path, out_path, depth): (String, String, Option<usize>)| {
         let mut opts = vec![];
 
         search(
             PathBuf::from_str(&md_path).logged_unwrap(),
             PathBuf::from_str(&out_path).logged_unwrap(),
             lua,
-            depth,
+            depth.unwrap_or(0),
             &mut opts,
         );
 
         Ok(opts)
     });
+
+    let project_base = std::env::current_dir().logged_unwrap();
+    let pages_base = project_base.join("pages");
+    let output_base = project_base.join("output");
+    globals.set("project_base", project_base.to_str().logged_unwrap()).logged_unwrap();
+    globals.set("pages_base", pages_base.to_str().logged_unwrap()).logged_unwrap();
+    globals.set("output_base", output_base.to_str().logged_unwrap()).logged_unwrap();
 
     lua.load(read("./postprocess.lua").logged_unwrap())
         .set_name("postprocess.lua")
@@ -75,8 +131,8 @@ fn main() {
         .logged_unwrap();
 
     search(
-        std::env::current_dir().logged_unwrap().join("pages"),
-        std::env::current_dir().logged_unwrap().join("output"),
+        pages_base,
+        output_base,
         &lua,
         0,
         &mut vec![],
