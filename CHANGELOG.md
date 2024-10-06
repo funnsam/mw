@@ -1,6 +1,7 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+- Updated dependencies and fixed workflow
 
 # 0.4.2
 - Enabled HTML embedding

@@ -64,7 +64,7 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
             Some(opt)
         }
         Node::Toml(Toml { value, .. }) => Some(value.parse().logged_unwrap()),
-        Node::BlockQuote(BlockQuote { children, .. }) => {
+        Node::Blockquote(Blockquote { children, .. }) => {
             start_ended_parent!("<blockquote>" children "</blockquote>")
         }
         Node::List(List {
