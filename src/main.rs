@@ -14,6 +14,8 @@ fn get_options() -> compiler::CompileOptions {
     options.md_options.constructs.frontmatter = true;
     options.md_options.constructs.math_text = true;
     options.md_options.constructs.math_flow = true;
+    options.md_options.constructs.html_text = true;
+    options.md_options.constructs.html_flow = true;
 
     options
 }

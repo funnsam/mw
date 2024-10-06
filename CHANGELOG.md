@@ -1,6 +1,7 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+- Enabled HTML embedding
 
 # 0.4.1
 ## Lua API
