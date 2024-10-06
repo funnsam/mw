@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+
+# 0.4.3
 - Updated dependencies and fixed workflow
 
 # 0.4.2
