@@ -1,6 +1,6 @@
 [package]
 name = "mkwebsite"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "A tool to build websites using markdown."
 license = "BSD-2-Clause-Patent"

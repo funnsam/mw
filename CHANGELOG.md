@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+
+# 0.4.2
 - Enabled HTML embedding
 
 # 0.4.1

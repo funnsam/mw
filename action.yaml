@@ -7,7 +7,7 @@ runs:
       run: sudo apt install liblua5.4-dev -y
       shell: bash
     - name: Install mkwebsite
-      run: cargo install mkwebsite --version 0.4.1
+      run: cargo install mkwebsite --version 0.4.2
       shell: bash
     - name: Build page
       run: mkwebsite
