@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+- Added the `watch` default feature
+- It now requires to specify `build` or `watch` mode
 
 # 0.4.3
 - Updated dependencies and fixed workflow

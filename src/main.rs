@@ -1,8 +1,10 @@
 use std::{fs::*, path::*, str::FromStr};
 
+mod args;
 mod compiler;
 #[macro_use]
 mod log;
+use clap::Parser;
 use log::LoggedUnwrap;
 use mlua::Function;
 
@@ -20,8 +22,7 @@ fn get_options() -> compiler::CompileOptions {
     options
 }
 
-fn main() {
-    let lua = unsafe { mlua::Lua::unsafe_new() };
+fn init_lua(lua: &mlua::Lua) {
     let globals = lua.globals();
 
     let config = &read_to_string("./config.toml")
@@ -120,6 +121,20 @@ fn main() {
         Ok(opts)
     });
 
+
+    lua.load(read("./postprocess.lua").logged_unwrap())
+        .set_name("postprocess.lua")
+        .exec()
+        .logged_unwrap();
+}
+
+fn main() {
+    let mode = args::Mode::parse();
+
+    let lua = unsafe { mlua::Lua::unsafe_new() };
+    init_lua(&lua);
+    let globals = lua.globals();
+
     let project_base = std::env::current_dir().logged_unwrap();
     let pages_base = project_base.join("pages");
     let output_base = project_base.join("output");
@@ -127,18 +142,48 @@ fn main() {
     globals.set("pages_base", pages_base.to_str().logged_unwrap()).logged_unwrap();
     globals.set("output_base", output_base.to_str().logged_unwrap()).logged_unwrap();
 
-    lua.load(read("./postprocess.lua").logged_unwrap())
-        .set_name("postprocess.lua")
-        .exec()
-        .logged_unwrap();
+    match mode {
+        args::Mode::Build => {
+            search(
+                pages_base,
+                output_base,
+                &lua,
+                0,
+                &mut vec![],
+            );
+        },
+        #[cfg(feature = "watch")]
+        args::Mode::Watch => {
+            use notify::*;
 
-    search(
-        pages_base,
-        output_base,
-        &lua,
-        0,
-        &mut vec![],
-    );
+            search(
+                pages_base.clone(),
+                output_base.clone(),
+                &lua,
+                0,
+                &mut vec![],
+            );
+
+            let (tx, rx) = std::sync::mpsc::channel::<Result<Event>>();
+
+            let mut watcher = recommended_watcher(tx).logged_unwrap();
+            watcher.watch(&pages_base, RecursiveMode::Recursive).logged_unwrap();
+
+            for event in rx {
+                if let Ok(Event { kind: EventKind::Create(..) | EventKind::Modify(..), paths, .. }) = event {
+                    // TODO: make it so that it only generate for changed files
+                    search(
+                        pages_base.clone(),
+                        output_base.clone(),
+                        &lua,
+                        0,
+                        &mut vec![],
+                    );
+                    info!("regenerated website for {} path(s)", paths.len());
+                }
+            }
+        },
+    }
 }
 
 fn search<'a>(
