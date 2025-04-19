@@ -1,6 +1,7 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+- Fix HTML nodes emitting text instead of HTML
 
 # 0.5.0
 - Added the `watch` default feature

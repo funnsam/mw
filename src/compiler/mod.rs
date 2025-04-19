@@ -92,7 +92,10 @@ pub fn to_html(ast: &Node, acc: &mut String) -> Option<toml::Table> {
         },
         Node::Delete(Delete { children, .. }) => start_ended_parent!("<s>" children "</s>"),
         Node::Emphasis(Emphasis { children, .. }) => start_ended_parent!("<i>" children "</i>"),
-        Node::Html(Html { value, .. }) => start_ended_value!("" value ""),
+        Node::Html(Html { value, .. }) => {
+            *acc += &value;
+            None
+        },
         Node::Image(Image { alt, url, .. }) => {
             start_ended_value!("<img src=\"{url}\" alt=\"" alt "\">")
         }
