@@ -1,6 +1,8 @@
 <!-- updated by cargo-release -->
 
 # Unreleased
+
+# 0.6.0
 - Fix HTML nodes emitting text instead of HTML
 
 # 0.5.0
